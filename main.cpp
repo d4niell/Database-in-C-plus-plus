@@ -20,9 +20,9 @@ void SaveData_local(std::string message) {
 
 void CheckForPrivilege() {
 	std::ofstream savedata;
-	savedata.open("c://sqlprojekti.txt");
+	savedata.open("c://adminprivilegetest.txt");
 	if (savedata.is_open()) {
-		if (remove("c://sqlprojekti.txt") == 0) {
+		if (remove("c://adminprivilegetest.txt") == 0) {
 		}
 	}
 	else
@@ -100,15 +100,17 @@ int main() {
 	
 	}
 	if (ans == 1) {
-		
+		begin:
 			system("cls");
 			std::cout << "Enter Username:"; std::cin >> username;
 			std::cout << "\nEnter Password:"; std::cin >> password;
 			if (username.length() < 3) {
 				std::cout << "Username's length is not long enough. Expected Length (>3)";
+				goto begin;
 			}
 			if (password.length() < 3) {
 				std::cout << "Password's length is not long enough. Expected Length (>3)";
+				goto begin;
 			}
 			else {
 				username = username;
@@ -124,7 +126,9 @@ int main() {
 		
 	}
 	else {
-
+		logs("Invalid Input", 2);
+		system("cls");
+		goto start;
 	}
 
 	return 0;
