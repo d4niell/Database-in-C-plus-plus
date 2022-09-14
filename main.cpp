@@ -7,7 +7,8 @@
 int ans = 0;
 
 bool logs(std::string message, int type);
-
+std::string username;
+std::string password;
 
 void SaveData_local(std::string message) {
 	std::ofstream SaveData_local;
@@ -62,7 +63,19 @@ bool logs(std::string message, int type) { //prints out logs
 	return 0;
 }
 
+void SendQuery(std::string Query) {
+	char* err;
+	sqlite3* db;
+	const sqlite3_stmt* stmt;
+	sqlite3_open("Kouluhomma.db", &db);
+	int a1 = sqlite3_exec(db, Query.c_str(), NULL,NULL, &err);
+	if (a1 != SQLITE_OK) {
+		logs("Query Request Failed. Reason:", 3);
+		std::cout << &err;
+	
+	}
 
+}
 
 
 
@@ -71,16 +84,9 @@ int main() {
 	char* err;
 	sqlite3* db;
 	const sqlite3_stmt* stmt;
-	std::string username;
-	std::string password;
 	color(8);
 	CheckForPrivilege();
 	sqlite3_open("Kouluhomma.db", &db);
-	std::string b2a = "SELECT * FROM UserDB";
-	int b2 = sqlite3_exec(db, b2a.c_str(), NULL, NULL, NULL);
-	if (b2 != SQLITE_OK) {
-		std::cout << &err;
-	}
 	int a1 = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS UserDB (id integer PRIMARY KEY, name varchar(20), password varchar(20));", NULL, NULL, &err);
 	int a2 = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS ItemDB (id integer PRIMARY KEY, itemID varchar(20));", NULL, NULL, &err);
 	int a3 = sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS InventoryDB (id integer PRIMARY KEY, itemID integer FOREIGN KEY, amount integer)", NULL, NULL, &err);
@@ -90,11 +96,25 @@ int main() {
 		std::cout << &err;
 	}
 
-	start:
+start:
+	std::cout << "\n[0] View Database";
 	std::cout << "\n[1] Register.\n";
 	std::cout << "[2] Login.\n\n";
 	std::cout << "[3] Exit.\n\n:";
 	std::cin >> ans;
+	if (ans == 0) {
+		std::string b2a = "SELECT * FROM UserDB";
+		int b2 = sqlite3_exec(db, b2a.c_str(), NULL, NULL, NULL);
+		if (b2 != SQLITE_OK) {
+			std::cout << &err;
+			
+		}
+		else {
+			system("cls");
+			std::cout << "\rOUTPUT:" <<b2;
+			system("pause");
+		}
+	}
 	if (ans == 3) {
 		system("exit");
 	
@@ -115,15 +135,8 @@ int main() {
 			else {
 				username = username;
 				password = password;
-				logs("Account Creation was successful", 1);
-				std::string b1 = "INSERT INTO UserDB (name, password) VALUES (" + username + "," + password + ")";
-				int Createacc = sqlite3_exec(db, b1.c_str(), NULL, NULL, NULL);
-				if (Createacc != SQLITE_OK) {
-					std::cout << "Couldn't create account. Reason:" << &err;
-
-				}
+				SendQuery("INSERT INTO UserDB(name, password) VALUES(" + username + ", " + password + "");
 			}
-		
 	}
 	else {
 		logs("Invalid Input", 2);
