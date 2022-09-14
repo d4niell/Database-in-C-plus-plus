@@ -92,8 +92,13 @@ int main() {
 
 	start:
 	std::cout << "\n[1] Register.\n";
-	std::cout << "[2] Login.\n\n:";
+	std::cout << "[2] Login.\n\n";
+	std::cout << "[3] Exit.\n\n:";
 	std::cin >> ans;
+	if (ans == 3) {
+		system("exit");
+	
+	}
 	if (ans == 1) {
 		
 			system("cls");
