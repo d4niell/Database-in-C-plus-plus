@@ -5,11 +5,17 @@
 #include <Windows.h>
 #include <stdio.h>
 int ans = 0;
+int isAdmin = 0;
+int isChecked = false;
 const char* dir = "c:\\Database.db";
+bool advanced_mode = false;
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
 static int createTable(const char* s);
+void SettingsTab();
+void Checkforsettings();
+int main(const char* s);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 static int insertData(const char* s, std::string sql);
@@ -27,6 +33,8 @@ bool CheckForPrivilege() {
 	savedata.open("c://adminprivilegetest.txt");
 	if (savedata.is_open()) {
 		if (remove("c://adminprivilegetest.txt") == 0) {
+			isAdmin = 1;
+			savedata.close();
 			return 0;
 		}
 	}
@@ -34,7 +42,7 @@ bool CheckForPrivilege() {
 	{
 		perror("Admin privileges is required");
 		Sleep(2000);
-		system("exit");
+		//system("exit");
 		return 1;
 	}
 
@@ -50,17 +58,17 @@ bool logs(std::string message, int type) { //prints out logs
 	switch (type) {
 	case 1:
 		color(2);
-		std::cout << message << "\n";
+		std::cout <<"[*] " <<message << "\n";
 		color(8);
 		break;
 	case 2:
 		color(4);
-		std::cout << message << "\n";
+		std::cout << "[!] "<<message << "\n";
 		color(8);
 		break;
 	case 3:
 		color(6);
-		std::cout << message << "\n";
+		std::cout <<"[x] " <<message << "\n";
 		color(8);
 		break;
 	}
@@ -83,6 +91,8 @@ void SendQuery(const char* s, std::string Query) {
 
 }
 bool Register() {
+	system("cls");
+	color(14);
 	std::cout << "[*] Registration Panel";
 	color(8);
 	std::cout << "\n		Username:"; std::cin >> username; std::cout << "\n\n		Password:"; std::cin >> password;
@@ -92,18 +102,15 @@ bool Register() {
 			logs("password length is too short", 2);
 			return 1;
 		}
-		else {
-			logs("Saving to Database",1);
-			system("pause");
-			return 0;
-		}
+
 	}
 	else {
 		logs("Saving to Database", 1);
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + username + "','" + password + "');";
 		insertData(dir, save);
 		logs("registration succesfull!",1);
-		system("pause");
+		Sleep(2000);
+		main(dir);
 		return 0;
 	}
 
@@ -146,14 +153,17 @@ static int selectData(const char* s, std::string sql)
 	}
 	else
 		std::cout << "Records selected Successfully!" << std::endl;
+	sqlite3_close(DB);
 
 	return 0;
 }
 
 bool Login() {
+	system("cls");
 	sqlite3* DB;
 	char* Error;
 	int exit = 0;
+	color(14);
 	std::cout << "[*] Login Panel";
 	color(8);
 	std::cout << "\n		Username:"; std::cin >> username; std::cout << "\n\n		Password:"; std::cin >> password;
@@ -169,22 +179,37 @@ bool Login() {
 	return 0;
 }
 int main(const char* s) {
-	
+	system("title dbincpp");
+	if (isChecked == false) {
+		Checkforsettings();
+	}
+
 	CheckForPrivilege();
 	sqlite3* db;
 	createDB(dir);
 	createTable(dir);
 
 start:
-	std::cout << "\n[0] View Database";
+	std::cout << "\n\n[0] View Database";
 	std::cout << "\n[1] Register.\n";
-	std::cout << "[2] Login.\n\n";
-	std::cout << "[3] Exit.\n\n:";
+	std::cout << "[2] Login.\n";
+	std::cout << "[3] Settings.\n";
+	std::cout << "[4] Exit.\n\n-> ";
+	color(14);
 	std::cin >> ans;
-	if (ans == 2) {
-		Login();
+	if (ans == 3) {
+		SettingsTab();
+	
+	}
+ 	if (ans == 2) {
+
+
+			Login();
+
+		
 	}
 	if (ans == 1) {
+
 		Register();
 	
 	
@@ -194,7 +219,8 @@ start:
 		char* error;
 		logs("Attempting to view Database", 1);
 		selectData(dir, "SELECT * FROM User;");
-		system("pause");
+		Sleep(2000);
+		goto start;
 	}
 	if (ans == 3) {
 		system("exit");
@@ -229,7 +255,7 @@ static int createDB(const char* s) {
 static int createTable(const char* s) {
 	int exception;
 	sqlite3* db;
-	std::string query = "CREATE TABLE User ("
+	std::string query = "CREATE TABLE IF NOT EXISTS User ("
 		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"username TEXT NOT NULL,"
 		"password TEXT NOT NULL,"
@@ -302,4 +328,62 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 	std::cout << std::endl;
 
 	return 0;
+}
+void SettingsTab() {
+	int sans = 0;
+	system("cls");
+	logs("Here you can customize this application as you desire", 1);
+	std::cout << "\n\n[0] Advanced Mode (enable commands) \n\n-> ";
+	color(14);
+	std::cin >> sans;
+	if (sans == 0) {
+		logs("note that this will disable all the visual options to make the application look cleaner but this is mainly for dev", 1);
+		color(8);
+		logs("[1 yes/ 2 no]Are you sure you want to enable this? You can revert this at any time in settings.", 2);
+		int sans1 = 0;
+		color(14);
+		std::cin >> sans1;
+		if (sans1 == 1) {
+			std::ofstream advanced_mode;
+			advanced_mode.open("c://dbincpp_settings.txt");
+			if (advanced_mode.is_open()) {
+				advanced_mode << "1";
+				advanced_mode.close();
+			
+			}
+		
+		}
+	
+	}
+
+	
+}
+void Checkforsettings() {
+	std::ofstream data;
+	data.open("c://dbincpp_settings.txt", std::ios::app);
+	if (data.is_open()) {
+		data.close();
+		std::fstream data;
+		data.open("c://dbincpp_settings.txt");
+		std::string line;
+		if (data.is_open()) {
+			while (getline(data, line)) {
+				if (line != "1") {
+					data.close();
+					isChecked = true;
+				}
+				else {
+					advanced_mode = true;
+					isChecked = true;
+				}
+			}
+		}
+	}
+	else {
+		logs("Your Settings Couldn't Be Loaded Due To Insufficient Permissions.",3);
+			Sleep(2000);
+			isChecked = true;
+			main(dir);
+	}
+
 }
