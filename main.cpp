@@ -6,6 +6,7 @@
 #include <stdio.h>
 int ans = 0;
 int isAdmin = 0;
+bool isLoginned = false;
 int isChecked = false;
 const char* dir = "c:\\Database.db";
 bool advanced_mode = false;
@@ -105,7 +106,9 @@ bool Register() {
 
 	}
 	else {
-		logs("Saving to Database", 1);
+		//selectData(dir, "SELECT * FROM User WHERE username ='" + username + "';");
+		
+		//logs("Saving to Database", 1);
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + username + "','" + password + "');";
 		insertData(dir, save);
 		logs("registration succesfull!",1);
@@ -159,32 +162,44 @@ static int selectData(const char* s, std::string sql)
 }
 
 bool Login() {
+	std::string m_login;
+	std::string m_password;
+	int exit = 0;
 	system("cls");
 	sqlite3* DB;
+	sqlite3_open(dir, &DB);
 	char* Error;
-	int exit = 0;
 	color(14);
 	std::cout << "[*] Login Panel";
 	color(8);
 	std::cout << "\n		Username:"; std::cin >> username; std::cout << "\n\n		Password:"; std::cin >> password;
-	exit = selectData(dir, "SELECT * FROM User WHERE username = '" + username + "' AND password = '" + password + "';");
+	std::string query = "SELECT * FROM User WHERE username ='" + username + "', AND password = '" + password + "';";
+	exit = sqlite3_open(dir, &DB);
+	exit = sqlite3_exec(DB, query.c_str(), NULL, 0, &Error);
 	if (exit != SQLITE_OK) {
-		std::cout << "\nInvalid Credentials" << &Error;
+		std::cout << "\nError While trying to login:" << Error;
 		sqlite3_free(Error);
 	}
-	else {
-	std::cout << "LOGIN SUCCESSFULL!";
+	if (m_login == username && m_password == password) {
+		std::cout << "PERFECT CODENZ";
+		system("pause");
 	}
 
 	return 0;
 }
+
+
 int main(const char* s) {
 	system("title dbincpp");
+
 	if (isChecked == false) {
 		Checkforsettings();
 	}
 
 	CheckForPrivilege();
+	if (isLoginned == false) {
+		logs("You're not logged in, please make sure to do so or register by pressing 2", 2);
+	}
 	sqlite3* db;
 	createDB(dir);
 	createTable(dir);
@@ -199,20 +214,13 @@ start:
 	std::cin >> ans;
 	if (ans == 3) {
 		SettingsTab();
-	
 	}
  	if (ans == 2) {
-
-
-			Login();
-
-		
+		Login();
 	}
 	if (ans == 1) {
 
 		Register();
-	
-	
 	}
 	if (ans == 0) {
 
@@ -314,7 +322,7 @@ static int createTable(const char* s) {
 		}
 	}
 
-
+	sqlite3_close(db);
 
 	return 0;
 }
