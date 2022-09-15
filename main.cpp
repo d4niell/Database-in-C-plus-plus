@@ -151,7 +151,48 @@ static int createTable(const char* s) {
 		sqlite3_free(Error);
 	}
 	else {
-		logs("Table Created Successfully", 1);
+		logs("User table Created Successfully", 1);
+		query = "CREATE TABLE IF NOT EXISTS ItemDB ("
+			"itemID INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"itemName TEXT NOT NULL);";
+		exit = sqlite3_open(s, &db);
+		exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
+		if (exit != SQLITE_OK) {
+			std::cout << "\nError While Creating Table:" << Error;
+			sqlite3_free(Error);
+		}
+		else {
+			logs("Item Database table Created Successfully", 1);
+			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
+				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+				"price INTEGER);";
+
+			exit = sqlite3_open(s, &db);
+			exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
+			if (exit != SQLITE_OK) {
+				std::cout << "\nError While Creating Table:" << Error;
+				sqlite3_free(Error);
+			}
+			else {
+				logs("Marketplace Database table Created Successfully", 1);
+				query = "CREATE TABLE IF NOT EXISTS Inventory ("
+					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+					"item INTEGER FOREIGN KEY REFERENCES ItemDB(itemID),"
+					"amount INTEGER);";
+					
+				exit = sqlite3_open(s, &db);
+				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
+				if (exit != SQLITE_OK) {
+					std::cout << "\nError While Creating Table:" << Error;
+					sqlite3_free(Error);
+				}
+				else {
+					logs("Inventory table was created successfully!", 1);
+				
+				}
+			
+			}
+		}
 	}
 
 
