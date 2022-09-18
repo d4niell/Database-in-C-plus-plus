@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <Windows.h>
+#include <vector>
 #include <stdio.h>
 int ans = 0;
 int isAdmin = 0;
@@ -148,7 +149,7 @@ static int selectData(const char* s, std::string sql)
 
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
-	exit = sqlite3_exec(DB, sql.c_str(), callback, NULL, &messageError);
+	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
 
 	if (exit != SQLITE_OK) {
 		std::cerr << "Error in selectData function." << std::endl;
@@ -156,41 +157,75 @@ static int selectData(const char* s, std::string sql)
 	}
 	else
 		std::cout << "Records selected Successfully!" << std::endl;
-	sqlite3_close(DB);
+
 
 	return 0;
 }
 
 bool Login() {
-	std::string m_login;
-	std::string m_password;
-	int exit = 0;
-	system("cls");
+
 	sqlite3* DB;
-	sqlite3_open(dir, &DB);
-	char* Error;
+	char* messageError;
+	//sqlite3_stmt* stmt;
+	std::string m_username;
+	std::string m_password;
+	int exit = sqlite3_open(dir, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	system("cls");
 	color(14);
 	std::cout << "[*] Login Panel";
 	color(8);
 	std::cout << "\n		Username:"; std::cin >> username; std::cout << "\n\n		Password:"; std::cin >> password;
-	std::string query = "SELECT * FROM User WHERE username ='" + username + "', AND password = '" + password + "';";
-	exit = sqlite3_open(dir, &DB);
-	exit = sqlite3_exec(DB, query.c_str(), NULL, 0, &Error);
-	if (exit != SQLITE_OK) {
-		std::cout << "\nError While trying to login:" << Error;
-		sqlite3_free(Error);
-	}
-	if (m_login == username && m_password == password) {
-		std::cout << "PERFECT CODENZ";
-		system("pause");
-	}
+	std::string sql = "SELECT username, password FROM User WHERE username = '" + username + "' AND password = '" + password + "';";
 
+	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+
+		sqlite3_free(messageError);
+	}
+	else
+		if (username.length() > 3 && password.length() > 3) {
+			std::fstream credentials;
+			credentials.open("c://credentials.txt");
+				std::string line;
+				if (!credentials.is_open()) {
+					perror("Something bad happened:");
+				}
+				else {
+					while (getline(credentials, line)) {
+						std::vector<std::string> lines;
+						lines.push_back(line);
+						for (const auto& i : lines) {
+							if (line.find(username)) {
+								
+								std::cout << "username found!";
+								system("pause");
+								if (line.find(password)) {
+									std::cout << "password found!";
+									system("pause");
+									//FINALLYLYLLYLYLYL
+								}
+							}
+							else {
+							
+							}
+						
+						}
+					}
+				
+				}
+		}
+
+	//system("pause");
+	remove("c://credentials.txt");
+	sqlite3_close(DB);
 	return 0;
 }
 
 
 int main(const char* s) {
-	system("title dbincpp");
+	system("title dbincpp (top codenz $$$$$)");
 
 	if (isChecked == false) {
 		Checkforsettings();
@@ -328,13 +363,20 @@ static int createTable(const char* s) {
 }
 static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
+	std::ofstream data;
 	for (int i = 0; i < argc; i++) {
-		// column name and value
-		std::cout << azColName[i] << ": " << argv[i] << std::endl;
+		
+		data.open("c://credentials.txt", std::ios::app);
+		if (data.is_open()) {
+			data << "\n" << argv[i];
+		}
+		
+	//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
+	
 	}
-
-	std::cout << std::endl;
-
+	
+	//std::cout << std::endl;
+	data.close();
 	return 0;
 }
 void SettingsTab() {
