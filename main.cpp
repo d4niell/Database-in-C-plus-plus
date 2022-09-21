@@ -16,7 +16,9 @@ std::string username;
 std::string password;
 static int createTable(const char* s);
 void SettingsTab();
+std::vector<std::string> lines;
 void Checkforsettings();
+std::string line;
 int main(const char* s);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
@@ -29,24 +31,37 @@ void SaveData_local(std::string message) {
 	}
 
 }
+/*void streamFile(std::string filename, std::string fileData) {
+	std::ofstream ofFile;
+	//std::fstream fFile; TODO
+		ofFile.open(filename);
+		if (ofFile.is_open()) {
+			ofFile << fileData;
+		}
+		else {
+			perror("Whoops ");
+		}
 
-bool CheckForPrivilege() {
-	std::ofstream savedata;
-	savedata.open("c://adminprivilegetest.txt");
-	if (savedata.is_open()) {
-		if (remove("c://adminprivilegetest.txt") == 0) {
-			isAdmin = 1;
-			savedata.close();
-			return 0;
+}*/
+
+
+BOOL CheckforPrivilege() {
+	BOOL fRet = FALSE;
+	HANDLE hToken = NULL;
+	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+		TOKEN_ELEVATION Elevation;
+		DWORD cbSize = sizeof(TOKEN_ELEVATION);
+		if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize)) {
+			fRet = Elevation.TokenIsElevated;
 		}
 	}
-	else
-	{
-		perror("Admin privileges is required");
-		Sleep(2000);
-		//system("exit");
-		return 1;
+	if (hToken) {
+		CloseHandle(hToken);
 	}
+	if (fRet == 0) {
+		logs("Admin privileges are necessary", 2);
+	}
+	return fRet;
 
 }
 
@@ -60,37 +75,23 @@ bool logs(std::string message, int type) { //prints out logs
 	switch (type) {
 	case 1:
 		color(2);
-		std::cout <<"[*] " <<message << "\n";
+		std::cout << "[*] " << message << "\n";
 		color(8);
 		break;
 	case 2:
 		color(4);
-		std::cout << "[!] "<<message << "\n";
+		std::cout << "[!] " << message << "\n";
 		color(8);
 		break;
 	case 3:
 		color(6);
-		std::cout <<"[x] " <<message << "\n";
+		std::cout << "[x] " << message << "\n";
 		color(8);
 		break;
 	}
 
 
 	return 0;
-}
-
-void SendQuery(const char* s, std::string Query) {
-
-	sqlite3* db;
-	char* Error;
-	int exit = 0;
-	exit = sqlite3_open(s, &db);
-	exit = sqlite3_exec(db, Query.c_str(), NULL, 0, &Error);
-	if (exit != SQLITE_OK) {
-		std::cout << "\nError While Creating Table:" << Error;
-		sqlite3_free(Error);
-	}
-
 }
 bool Register() {
 	system("cls");
@@ -108,11 +109,11 @@ bool Register() {
 	}
 	else {
 		//selectData(dir, "SELECT * FROM User WHERE username ='" + username + "';");
-		
+
 		//logs("Saving to Database", 1);
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + username + "','" + password + "');";
 		insertData(dir, save);
-		logs("registration succesfull!",1);
+		logs("registration succesfull!", 1);
 		Sleep(2000);
 		main(dir);
 		return 0;
@@ -130,7 +131,7 @@ static int insertData(const char* s, std::string sql)
 
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here */
-	exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
+	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
 		std::cerr << "Error in insertData function." << std::endl;
 		sqlite3_free(messageError);
@@ -145,7 +146,7 @@ static int selectData(const char* s, std::string sql)
 	sqlite3* DB;
 	char* messageError;
 
-	
+
 
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
@@ -161,7 +162,16 @@ static int selectData(const char* s, std::string sql)
 
 	return 0;
 }
+void highlighter(std::string message, std::string highlightedMessage) {
+	std::cout << message; color(14); std::cout << highlightedMessage << "\n\n"; color(8);
+}
+void userPanel() {
+	int userans;
+	highlighter("Welcome back, ", username);
+	std::cout << "[0] Visit ATM"; 
+	std::cout << "\n\n-> "; color(14); std::cin >> userans; color(8);
 
+}
 bool Login() {
 
 	sqlite3* DB;
@@ -187,38 +197,34 @@ bool Login() {
 	else
 		if (username.length() > 3 && password.length() > 3) {
 			std::fstream credentials;
-			credentials.open("c://credentials.txt");
-				std::string line;
-				if (!credentials.is_open()) {
-					perror("Something bad happened:");
-				}
-				else {
-					while (getline(credentials, line)) {
-						std::vector<std::string> lines;
-						lines.push_back(line);
-						for (const auto& i : lines) {
-							if (line.find(username)) {
-								
-								std::cout << "username found!";
-								system("pause");
-								if (line.find(password)) {
-									std::cout << "password found!";
-									system("pause");
-									//FINALLYLYLLYLYLYL
-								}
-							}
-							else {
-							
-							}
-						
+			credentials.open("c://data.txt"); //this will be changed to some better way (not urgent as of now)
+			//std::string line;
+			if (!credentials.is_open()) {
+				perror("Something bad happened:");
+			}
+			else {
+				while (getline(credentials, line)) {
+					std::vector<std::string> lines;
+					lines.push_back(line);
+					for (const auto& i : lines) {
+						if (line.find(username) && line.find(password)) {
+							credentials.close();
+							//system("pause");
+							remove("c://data.txt");
+							userPanel();
 						}
+						else {
+							std::cout << "Invalid Credentials...";
+							Sleep(2000);
+						}
+
 					}
-				
 				}
+
+			}
 		}
 
 	//system("pause");
-	remove("c://credentials.txt");
 	sqlite3_close(DB);
 	return 0;
 }
@@ -231,7 +237,7 @@ int main(const char* s) {
 		Checkforsettings();
 	}
 
-	CheckForPrivilege();
+	CheckforPrivilege();
 	if (isLoginned == false) {
 		logs("You're not logged in, please make sure to do so or register by pressing 2", 2);
 	}
@@ -250,7 +256,7 @@ start:
 	if (ans == 3) {
 		SettingsTab();
 	}
- 	if (ans == 2) {
+	if (ans == 2) {
 		Login();
 	}
 	if (ans == 1) {
@@ -341,7 +347,7 @@ static int createTable(const char* s) {
 					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
 					"item int FOREIGN KEY REFERENCES ItemDB(itemID),"
 					"amount INTEGER);";
-					
+
 				exit = sqlite3_open(s, &db);
 				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 				if (exit != SQLITE_OK) {
@@ -350,9 +356,9 @@ static int createTable(const char* s) {
 				}
 				else {
 					logs("Inventory table was created successfully!", 1);
-				
+
 				}
-			
+
 			}
 		}
 	}
@@ -365,16 +371,16 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
 	std::ofstream data;
 	for (int i = 0; i < argc; i++) {
-		
-		data.open("c://credentials.txt", std::ios::app);
+
+		data.open("c://data.txt", std::ios::app);
 		if (data.is_open()) {
-			data << "\n" << argv[i];
+			data << "\n" << azColName[i]<<" >> " << argv[i];
 		}
-		
-	//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
-	
+
+		//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
+
 	}
-	
+
 	//std::cout << std::endl;
 	data.close();
 	return 0;
@@ -399,14 +405,14 @@ void SettingsTab() {
 			if (advanced_mode.is_open()) {
 				advanced_mode << "1";
 				advanced_mode.close();
-			
+
 			}
-		
+
 		}
-	
+
 	}
 
-	
+
 }
 void Checkforsettings() {
 	std::ofstream data;
@@ -430,10 +436,10 @@ void Checkforsettings() {
 		}
 	}
 	else {
-		logs("Your Settings Couldn't Be Loaded Due To Insufficient Permissions.",3);
-			Sleep(2000);
-			isChecked = true;
-			main(dir);
+		logs("Your Settings Couldn't Be Loaded Due To Insufficient Permissions.", 3);
+		Sleep(2000);
+		isChecked = true;
+		main(dir);
 	}
 
 }
