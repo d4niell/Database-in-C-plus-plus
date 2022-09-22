@@ -17,6 +17,7 @@ std::string password;
 static int createTable(const char* s);
 void SettingsTab();
 std::vector<std::string> lines;
+void fetchcashAmount();
 void Checkforsettings();
 void userPanel();
 std::string line;
@@ -59,6 +60,8 @@ public:
 	int userpanelAns;
 	int ATMAns;
 	int cash;
+	int marketplaceAns;
+	std::string item;
 
 }user;
 
@@ -201,11 +204,13 @@ void Addmoney(std::string username, std::string amount) {
 		Sleep(1000);
 		userPanel();
 	}
+	sqlite3_close(DB);
 }
 void ATM() {
+	fetchcashAmount();
 	highlighter("Welcome back, ", username);
 	std::cout << "\nYou Currently have: $" << user.cash << "\n";
-	userInput(0, 3, "Withdraw", "Deposit", "Add money", "Exit");
+	userInput(0, 3, "Withdraw", "Deposit", "Manipulate money", "Exit");
 	std::string amount;
 	switch (user.ATMAns) {
 	case 1:
@@ -216,7 +221,8 @@ void ATM() {
 		break;
 	case 3:
 		//std::string amount;
-		std::cout << "\n\nEnter the amount:"; std::cin >> amount;
+		color(8);
+		std::cout << "\n\nEnter the amount you want to change your cash to:"; color(14); std::cin >> amount;	color(8);
 
 		Addmoney(username, amount);
 		break;
@@ -229,40 +235,85 @@ void ATM() {
 
 }
 void fetchcashAmount()  {
+	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
+	selectData(dir, query);
+	std::fstream data;
+	data.open("c://data.txt");
+	if (data.is_open()) {
+		std::string line;
+		while (getline(data, line)) {
+			std::vector<std::string> lines;
+			lines.push_back(line);
+			for (const auto& i : lines) {
+					int i_line = std::stoi(line, nullptr, 2);
+					user.cash = i_line;
+			}
+		}
+	
+	}
+	system("pause");
+}
+void additem_marketplace() {
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
-	std::string sql = "SELECT cash FROM User WHERE username = '" + username + "';";
-	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
+	
+	std::string query1 = "SELECT id FROM User WHERE username = '" + username + "';";
+	exit = sqlite3_exec(DB, query1.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
 		std::cerr << "Error in selectData function." << std::endl;
 
 		sqlite3_free(messageError);
 	}
 	else {
-		std::fstream cashData;
-		if (!cashData.is_open()) {
+		std::fstream fetchUID;
+		fetchUID.open("c://data.txt");
+		if (!fetchUID.is_open()) {
 			perror("Something bad happened:");
+			system("pause");
 		}
 		else {
-			while (getline(cashData, line)) {
-				std::vector<std::string> lines;
-				lines.push_back(line);
-				for (const auto& i : lines) {			
-					std::string::size_type sz;
-					int i_line = std::stoi(line, &sz);
-					user.cash = i_line;
-
-						cashData.close();
-						//system("pause");
-						remove("c://data.txt");
-						userPanel();
-				}
+			while (getline(fetchUID, line)) {
+				
+					std::cout << line;
+					system("pause");
+					fetchUID.close();
+					//system("pause");
+					remove("c://data.txt");
+					//userPanel();
+				
 			}
 
 		}
 	}
+
 }
+void Marketplace() {
+
+	logs("Here you can buy/sell items. This feature is still in beta!", 1);
+	userInput(0, 4, "View Marketplace", "Add Item", "Delete Item", "Exit");
+	switch (user.marketplaceAns) {
+	case 1:
+		break;
+	case 2:
+		int itemprice;
+		std::cout << "Select an item to sell\n"; std::cin >> user.item; std::cout << "\nSelect a price for the item\n:"; std::cin >> itemprice;
+		if (itemprice > 1) {
+			additem_marketplace();
+		}
+		break;
+	case 3:
+		break;
+	case 4:
+		userPanel();
+		break;
+	
+	
+	
+	}
+
+}
+
 void userPanel() {
 
 	//fetchcashAmount();
@@ -277,6 +328,7 @@ void userPanel() {
 	
 		break;
 	case 2:
+		Marketplace();
 		break;
 	case 3:
 		break;
@@ -336,7 +388,14 @@ bool Login() {
 					}
 				}
 
+
 			}
+
+		}
+		else {
+			logs("username/password length is invalid", 2);
+			Sleep(2000);
+			Login();
 		}
 
 	//system("pause");
@@ -396,6 +455,9 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 		break;
 	case 3:
 		user.ATMAns = ans;
+		break;
+	case 4:
+		user.marketplaceAns = ans;
 		break;
 	}
 
@@ -524,6 +586,7 @@ static int createTable(const char* s) {
 			logs("Item Database table Created Successfully", 1);
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
 				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+				"itemName varchar(20),"
 				"price INTEGER);";
 
 			exit = sqlite3_open(s, &db);
@@ -565,7 +628,8 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 
 		data.open("c://data.txt", std::ios::app);
 		if (data.is_open()) {
-			data << "\n" << argv[i];
+			data << argv[i];
+		//	i++;
 		}
 
 		//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
