@@ -18,16 +18,19 @@ static int createTable(const char* s);
 void SettingsTab();
 std::vector<std::string> lines;
 void Checkforsettings();
+void userPanel();
 std::string line;
+void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4);
 int main(const char* s);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 static int insertData(const char* s, std::string sql);
 void SaveData_local(std::string message) {
 	std::ofstream SaveData_local;
-	SaveData_local.open("C://logs.txt");
+	SaveData_local.open("C://logs.txt", std::ios::app);
 	if (SaveData_local.is_open()) {
-		logs("", 2);
+		//logs("", 2);
+		SaveData_local.close();
 	}
 
 }
@@ -43,7 +46,21 @@ void SaveData_local(std::string message) {
 		}
 
 }*/
+void addBorder(int type) {
+	switch (type) {
+	
+	
+	}
 
+}
+struct {
+public:
+	int mainAns;
+	int userpanelAns;
+	int ATMAns;
+	int cash;
+
+}user;
 
 BOOL CheckforPrivilege() {
 	BOOL fRet = FALSE;
@@ -165,11 +182,109 @@ static int selectData(const char* s, std::string sql)
 void highlighter(std::string message, std::string highlightedMessage) {
 	std::cout << message; color(14); std::cout << highlightedMessage << "\n\n"; color(8);
 }
-void userPanel() {
-	int userans;
+void Addmoney(std::string username, std::string amount) {
+	std::string::size_type sz;
+	std::string sql = "UPDATE User SET cash = " + amount + " WHERE username= '" + username + "' ;";
+	int i_amount = std::stoi(amount, &sz);
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(dir, &DB);
+	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		std::cerr << "Database error" << std::endl;
+
+		sqlite3_free(messageError);
+		system("pause");
+	}
+	else {
+		logs("Money was added successfully!", 1);
+		Sleep(1000);
+		userPanel();
+	}
+}
+void ATM() {
 	highlighter("Welcome back, ", username);
-	std::cout << "[0] Visit ATM"; 
-	std::cout << "\n\n-> "; color(14); std::cin >> userans; color(8);
+	std::cout << "\nYou Currently have: $" << user.cash << "\n";
+	userInput(0, 3, "Withdraw", "Deposit", "Add money", "Exit");
+	std::string amount;
+	switch (user.ATMAns) {
+	case 1:
+
+		break;
+	case 2:
+
+		break;
+	case 3:
+		//std::string amount;
+		std::cout << "\n\nEnter the amount:"; std::cin >> amount;
+
+		Addmoney(username, amount);
+		break;
+	case 4:
+
+		break;
+	
+	}
+
+
+}
+void fetchcashAmount()  {
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(dir, &DB);
+	std::string sql = "SELECT cash FROM User WHERE username = '" + username + "';";
+	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+
+		sqlite3_free(messageError);
+	}
+	else {
+		std::fstream cashData;
+		if (!cashData.is_open()) {
+			perror("Something bad happened:");
+		}
+		else {
+			while (getline(cashData, line)) {
+				std::vector<std::string> lines;
+				lines.push_back(line);
+				for (const auto& i : lines) {			
+					std::string::size_type sz;
+					int i_line = std::stoi(line, &sz);
+					user.cash = i_line;
+
+						cashData.close();
+						//system("pause");
+						remove("c://data.txt");
+						userPanel();
+				}
+			}
+
+		}
+	}
+}
+void userPanel() {
+
+	//fetchcashAmount();
+	//int userans;
+	userInput(1, 2, "ATM", "Marketplace", "Inventory", "Log out");
+	highlighter("Welcome back, ", username);
+//	system("title dbincpp Userpanel");
+	switch (user.userpanelAns) {
+	case 1:
+		system("cls");
+		ATM();
+	
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		main(dir);
+		break;
+	
+	}
 
 }
 bool Login() {
@@ -209,7 +324,7 @@ bool Login() {
 					for (const auto& i : lines) {
 						if (line.find(username) && line.find(password)) {
 							credentials.close();
-							//system("pause");
+						//	system("pause");
 							remove("c://data.txt");
 							userPanel();
 						}
@@ -227,6 +342,63 @@ bool Login() {
 	//system("pause");
 	sqlite3_close(DB);
 	return 0;
+}
+void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4) {
+	
+	int ans;
+	switch (cls)
+	{
+	case 0:
+		break;
+	case 1:
+		system("cls");
+		break;
+	
+	}
+		color(8);
+	std::cout << "\n[1]" << o1;
+	std::cout << "\n[2]" << o2;
+	std::cout << "\n[3]" << o3;
+	std::cout << "\n[4]" << o4 << "\n\n> ";
+	color(14); std::cin >> ans;
+	switch (ans) {
+	case 1:
+		if (o1 == "")
+			logs("Invalid Input", 2);
+		else
+
+		break;
+	case 2:
+		if (o2 == "")
+			logs("Invalid Input", 2);
+		else
+
+		break;
+	case 3:
+		if (o3 == "")
+			logs("Invalid Input", 2);
+		else
+
+		break;
+	case 4:
+		if (o4 == "")
+			logs("Invalid Input", 2);
+		else
+
+		break;
+	}
+	switch (type) {
+	case 1:
+		user.mainAns = ans;
+		break;
+	case 2:
+		user.userpanelAns = ans;
+		break;
+	case 3:
+		user.ATMAns = ans;
+		break;
+	}
+
 }
 
 
@@ -246,7 +418,26 @@ int main(const char* s) {
 	createTable(dir);
 
 start:
-	std::cout << "\n\n[0] View Database";
+	userInput(1,1, "Register.", "Login.", "Settings.", "Exit.");
+	switch (user.mainAns) {
+	case 1:
+		Register();
+		break;
+	case 2:
+		Login();
+		break;
+	case 3:
+		SettingsTab();
+		break;
+	case 4:
+		system("exit");
+		break;
+	
+	}
+
+
+
+	/*std::cout << "\n\n[0] View Database";
 	std::cout << "\n[1] Register.\n";
 	std::cout << "[2] Login.\n";
 	std::cout << "[3] Settings.\n";
@@ -283,7 +474,7 @@ start:
 		logs("Invalid Input", 2);
 		system("cls");
 		goto start;
-	}
+	}*/
 
 	return 0;
 }
@@ -374,7 +565,7 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 
 		data.open("c://data.txt", std::ios::app);
 		if (data.is_open()) {
-			data << "\n" << azColName[i]<<" >> " << argv[i];
+			data << "\n" << argv[i];
 		}
 
 		//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
