@@ -1,4 +1,4 @@
-#include <sqlite3.h>
+#include "sqlite/sqlite3.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,8 +9,11 @@ int ans = 0;
 int isAdmin = 0;
 bool isLoginned = false;
 int isChecked = false;
+bool database_created = false;
 const char* dir = "c:\\Database.db";
+bool isBeta = true;
 bool advanced_mode = false;
+std::string version = "1.0.7";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -47,13 +50,6 @@ void SaveData_local(std::string message) {
 		}
 
 }*/
-void addBorder(int type) {
-	switch (type) {
-	
-	
-	}
-
-}
 struct {
 public:
 	int mainAns;
@@ -95,17 +91,17 @@ bool logs(std::string message, int type) { //prints out logs
 	switch (type) {
 	case 1:
 		color(2);
-		std::cout << "[*] " << message << "\n";
+		std::cout << "[*] > " << message << "\n";
 		color(8);
 		break;
 	case 2:
 		color(4);
-		std::cout << "[!] " << message << "\n";
+		std::cout << "[!] > " << message << "\n";
 		color(8);
 		break;
 	case 3:
 		color(6);
-		std::cout << "[x] " << message << "\n";
+		std::cout << "[x] > " << message << "\n";
 		color(8);
 		break;
 	}
@@ -187,7 +183,7 @@ void highlighter(std::string message, std::string highlightedMessage) {
 }
 void Addmoney(std::string username, std::string amount) {
 	std::string::size_type sz;
-	std::string sql = "UPDATE User SET cash = " + amount + " WHERE username= '" + username + "' ;";
+	std::string sql = "INSERT INTO User (cash) VALUES (" + amount + ", '" + username + "'; ";
 	int i_amount = std::stoi(amount, &sz);
 	sqlite3* DB;
 	char* messageError;
@@ -207,10 +203,10 @@ void Addmoney(std::string username, std::string amount) {
 	sqlite3_close(DB);
 }
 void ATM() {
-	fetchcashAmount();
-	highlighter("Welcome back, ", username);
-	std::cout << "\nYou Currently have: $" << user.cash << "\n";
-	userInput(0, 3, "Withdraw", "Deposit", "Manipulate money", "Exit");
+	//	fetchcashAmount();
+		//highlighter("Welcome back, ", username);
+		//std::cout << "\nYou Currently have: $" << user.cash << "\n";
+	userInput(1, 3, "Withdraw", "Deposit", "Manipulate money", "Exit");
 	std::string amount;
 	switch (user.ATMAns) {
 	case 1:
@@ -229,12 +225,12 @@ void ATM() {
 	case 4:
 
 		break;
-	
+
 	}
 
 
 }
-void fetchcashAmount()  {
+void fetchcashAmount() {
 	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
 	selectData(dir, query);
 	std::fstream data;
@@ -245,11 +241,11 @@ void fetchcashAmount()  {
 			std::vector<std::string> lines;
 			lines.push_back(line);
 			for (const auto& i : lines) {
-					int i_line = std::stoi(line, nullptr, 2);
-					user.cash = i_line;
+				int i_line = std::stoi(line, nullptr, 2);
+				user.cash = i_line;
 			}
 		}
-	
+
 	}
 	system("pause");
 }
@@ -257,7 +253,7 @@ void additem_marketplace() {
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
-	
+
 	std::string query1 = "SELECT id FROM User WHERE username = '" + username + "';";
 	exit = sqlite3_exec(DB, query1.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
@@ -274,14 +270,14 @@ void additem_marketplace() {
 		}
 		else {
 			while (getline(fetchUID, line)) {
-				
-					std::cout << line;
-					system("pause");
-					fetchUID.close();
-					//system("pause");
-					remove("c://data.txt");
-					//userPanel();
-				
+
+				std::cout << line;
+				system("pause");
+				fetchUID.close();
+				//system("pause");
+				remove("c://data.txt");
+				//userPanel();
+
 			}
 
 		}
@@ -307,9 +303,9 @@ void Marketplace() {
 	case 4:
 		userPanel();
 		break;
-	
-	
-	
+
+
+
 	}
 
 }
@@ -318,14 +314,15 @@ void userPanel() {
 
 	//fetchcashAmount();
 	//int userans;
+	std::cout << "Welcome back, " << username;
 	userInput(1, 2, "ATM", "Marketplace", "Inventory", "Log out");
-	highlighter("Welcome back, ", username);
-//	system("title dbincpp Userpanel");
+
+	system("title dbincpp Userpanel");
 	switch (user.userpanelAns) {
 	case 1:
-		system("cls");
+		//system("cls");
 		ATM();
-	
+
 		break;
 	case 2:
 		Marketplace();
@@ -335,7 +332,7 @@ void userPanel() {
 	case 4:
 		main(dir);
 		break;
-	
+
 	}
 
 }
@@ -376,13 +373,15 @@ bool Login() {
 					for (const auto& i : lines) {
 						if (line.find(username) && line.find(password)) {
 							credentials.close();
-						//	system("pause");
+							//	system("pause");
 							remove("c://data.txt");
 							userPanel();
 						}
 						else {
-							std::cout << "Invalid Credentials...";
+							//std::cout << "Invalid Credentials...";
+							logs("Invalid Credentials", 2);
 							Sleep(2000);
+							main(dir);
 						}
 
 					}
@@ -402,8 +401,10 @@ bool Login() {
 	sqlite3_close(DB);
 	return 0;
 }
+
 void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4) {
-	
+
+	std::string title = ">	dbincpp v[" + version + "]";
 	int ans;
 	switch (cls)
 	{
@@ -412,39 +413,44 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	case 1:
 		system("cls");
 		break;
-	
+
 	}
-		color(8);
-	std::cout << "\n[1]" << o1;
-	std::cout << "\n[2]" << o2;
-	std::cout << "\n[3]" << o3;
-	std::cout << "\n[4]" << o4 << "\n\n> ";
-	color(14); std::cin >> ans;
+	if (isBeta == false) {
+		title += " Beta";
+	}
+	color(5);
+	std::cout << title;
+	color(8);
+	std::cout << "\n	[1]"; color(7); std::cout << o1; color(8);
+	std::cout << "\n	[2]"; color(7); std::cout << o2; color(8);
+	std::cout << "\n	[3]"; color(7); std::cout << o3; color(8);
+	std::cout << "\n	[4]"; color(7); std::cout << o4; color(8);
+	color(14); std::cout << "\n		> "; std::cin >> ans;
 	switch (ans) {
 	case 1:
 		if (o1 == "")
 			logs("Invalid Input", 2);
 		else
 
-		break;
+			break;
 	case 2:
 		if (o2 == "")
 			logs("Invalid Input", 2);
 		else
 
-		break;
+			break;
 	case 3:
 		if (o3 == "")
 			logs("Invalid Input", 2);
 		else
 
-		break;
+			break;
 	case 4:
 		if (o4 == "")
 			logs("Invalid Input", 2);
 		else
 
-		break;
+			break;
 	}
 	switch (type) {
 	case 1:
@@ -480,7 +486,7 @@ int main(const char* s) {
 	createTable(dir);
 
 start:
-	userInput(1,1, "Register.", "Login.", "Settings.", "Exit.");
+	userInput(1, 1, "Register.", "Login.", "Settings.", "Exit.");
 	switch (user.mainAns) {
 	case 1:
 		Register();
@@ -494,7 +500,7 @@ start:
 	case 4:
 		system("exit");
 		break;
-	
+
 	}
 
 
@@ -555,13 +561,14 @@ static int createDB(const char* s) {
 }
 
 static int createTable(const char* s) {
+
 	int exception;
 	sqlite3* db;
 	std::string query = "CREATE TABLE IF NOT EXISTS User ("
 		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"username TEXT NOT NULL,"
 		"password TEXT NOT NULL,"
-		"cash INTEGER);";
+		"cash INTEGER DEFAULT 0);";
 
 	char* Error;
 	int exit = 0;
@@ -572,7 +579,7 @@ static int createTable(const char* s) {
 		sqlite3_free(Error);
 	}
 	else {
-		logs("User table Created Successfully", 1);
+		//logs("User table Created Successfully", 1);
 		query = "CREATE TABLE IF NOT EXISTS ItemDB ("
 			"itemID int PRIMARY KEY AUTOINCREMENT,"
 			"itemName TEXT NOT NULL);";
@@ -583,7 +590,7 @@ static int createTable(const char* s) {
 			sqlite3_free(Error);
 		}
 		else {
-			logs("Item Database table Created Successfully", 1);
+			//logs("Item Database table Created Successfully", 1);
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
 				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
 				"itemName varchar(20),"
@@ -596,7 +603,7 @@ static int createTable(const char* s) {
 				sqlite3_free(Error);
 			}
 			else {
-				logs("Marketplace Database table Created Successfully", 1);
+				//logs("Marketplace Database table Created Successfully", 1);
 				query = "CREATE TABLE IF NOT EXISTS Inventory ("
 					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
 					"item int FOREIGN KEY REFERENCES ItemDB(itemID),"
@@ -609,7 +616,9 @@ static int createTable(const char* s) {
 					sqlite3_free(Error);
 				}
 				else {
-					logs("Inventory table was created successfully!", 1);
+					//logs("Inventory table was created successfully!", 1);
+
+
 
 				}
 
@@ -626,10 +635,10 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 	std::ofstream data;
 	for (int i = 0; i < argc; i++) {
 
-		data.open("c://data.txt", std::ios::app);
+		data.open("c://data.txt");
 		if (data.is_open()) {
-			data << argv[i];
-		//	i++;
+			data << " " << argv[i];
+			//	i++;
 		}
 
 		//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
