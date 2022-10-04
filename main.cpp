@@ -10,6 +10,7 @@ int isAdmin = 0;
 bool isLoginned = false;
 int isChecked = false;
 bool database_created = false;
+char** argv;
 const char* dir = "c:\\Database.db";
 bool isBeta = true;
 bool advanced_mode = false;
@@ -60,6 +61,7 @@ public:
 	std::string item;
 	int view_marketplace;
 	int add_item_marketplace;
+	int view_marketplace_edit;
 
 }user;
 
@@ -110,7 +112,7 @@ bool logs(std::string message, int type) { //prints out logs
 	std::ofstream logs;
 	logs.open("dbincpp_logs.txt", std::ios::app);
 	if (logs.is_open()) {
-		logs << "dbincpp << [" << message << "]\n";
+		logs << "dbincpp << [" << message << "]\n\n";
 	}
 
 	return 0;
@@ -134,7 +136,20 @@ bool Register() {
 
 		//logs("Saving to Database", 1);
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + username + "','" + password + "');";
-		insertData(dir, save);
+		sqlite3* DB;
+		char* messageError;
+
+
+
+		int exit = sqlite3_open(dir, &DB);
+		/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here */
+		exit = sqlite3_exec(DB, save.c_str(), callback, 0, &messageError);
+		if (exit != SQLITE_OK) {
+			std::cout << "oops:" << messageError;
+			logs("unsuccessfull register attempt.", 2);
+
+		}
+		else
 		logs("registration succesfull!", 1);
 		Sleep(2000);
 		main(dir);
@@ -189,7 +204,9 @@ void highlighter(std::string message, std::string highlightedMessage) {
 }
 void Addmoney(std::string username, std::string amount) {
 	std::string::size_type sz;
-	std::string sql = "INSERT INTO User (cash) VALUES (" + amount + ", '" + username + "'; ";
+	std::cout << username;
+	system("pause");
+	std::string sql = "UPDATE User SET cash =" + amount + " WHERE username = '" + username + "';";
 	int i_amount = std::stoi(amount, &sz);
 	sqlite3* DB;
 	char* messageError;
@@ -290,25 +307,36 @@ void view_marketplace() {
 	int exit = sqlite3_open(dir, &DB);
 	std::string query = "SELECT * FROM Marketplace";
 	int select_item;
-	std::string item_name = "test";
-	int item_price = 10;
+	std::string item_name;
+	std::string item_price;
 	int items = 10; //item amount (marketplace)
 	logs(items + " found.", 1);
+	std::cout << "=============ITEM LIST=============\n";
 	exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
 		std::cout << "oops:" << messageError;
 	}
-
-		std::fstream itemsDB;
-		itemsDB.open("c://data.txt");
-		if (itemsDB.is_open()) {
-			std::string lines;
-			while (getline(itemsDB, lines)) {
-				std::cout << lines;
+	std::cout << "=============ITEM LIST=============";
+	userInput(0, 7,"Buy Item", "Delete Item", "c", "d");
+	switch (user.view_marketplace_edit) {
+	case 1:
+		
+		std::cout << "name of the item:"; std::cin >> item_name;
+		query = "SELECT price FROM Marketplace WHERE itemName = '" + item_name + "'";
+		exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
+		std::fstream price_data;
+		price_data.open("c://data.txt");
+		if (price_data.is_open()) {
+			std::string line;
+			while (getline(price_data, line)) {
+				item_price = line;
+				std::cout << "this item costs $" << item_price << " do you want to buy this?";
 				system("pause");
 			}
 		}
+		break;
 
+	}
 }
 void Marketplace() {
 
@@ -334,11 +362,20 @@ void Marketplace() {
 }
 
 void userPanel() {
-
+	system("cls");
+	std::string welcome_message = "Welcome back, " + username;
+	if (username == "admin" || "d4niel") { //checks for admin
+		isAdmin == 1;
+	}
 	//fetchcashAmount();
 	//int userans;
-	std::cout << "Welcome back, " << username;
-	userInput(1, 2, "ATM", "Marketplace", "Inventory", "Log out");
+	if (isAdmin == 1) {
+		welcome_message += " isAdmin = true";
+	}
+	std::cout << welcome_message;
+
+
+	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Log out");
 
 	system("title dbincpp Userpanel");
 	switch (user.userpanelAns) {
@@ -394,11 +431,16 @@ bool Login() {
 					std::vector<std::string> lines;
 					lines.push_back(line);
 					for (const auto& i : lines) {
-						if (line.find(username) && line.find(password)) {
-							credentials.close();
-							//	system("pause");
-							remove("c://data.txt");
-							userPanel();
+						if (line.find(username)) {
+							Sleep(200);
+							if (line.find(password)) {
+								credentials.close();
+								//	system("pause");
+								remove("c://data.txt");
+								userPanel();
+								}
+							
+
 						}
 						else {
 							//std::cout << "Invalid Credentials...";
@@ -427,7 +469,7 @@ bool Login() {
 
 void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4) {
 
-	std::string title = ">	dbincpp v[" + version + "]";
+	std::string title = "\n>	dbincpp v[" + version + "]";
 	int ans;
 	switch (cls)
 	{
@@ -492,6 +534,8 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 		user.view_marketplace = ans;
 	case 6:
 		user.add_item_marketplace = ans;
+	case 7:
+		user.view_marketplace_edit = ans;
 	}
 
 }
@@ -596,7 +640,7 @@ static int createTable(const char* s) {
 		"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"username TEXT NOT NULL,"
 		"password TEXT NOT NULL,"
-		"cash INTEGER DEFAULT 0);";
+		"cash INTEGER NOT NULL DEFAULT 0);";
 
 	char* Error;
 	int exit = 0;
@@ -604,23 +648,13 @@ static int createTable(const char* s) {
 	exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 	if (exit != SQLITE_OK) {
 		std::cout << "\nError While Creating Table:" << Error;
+		logs("error on user table", 2);
 		sqlite3_free(Error);
 	}
 	else {
-		//logs("User table Created Successfully", 1);
-		query = "CREATE TABLE IF NOT EXISTS ItemDB ("
-			"itemID int PRIMARY KEY AUTOINCREMENT,"
-			"itemName TEXT NOT NULL);";
-		exit = sqlite3_open(s, &db);
-		exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
-		if (exit != SQLITE_OK) {
-			std::cout << "\nError While Creating Table:" << Error;
-			sqlite3_free(Error);
-		}
-		else {
-			//logs("Item Database table Created Successfully", 1);
+		logs("User table Created Successfully", 1);	
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
-				"userID INTEGER FOREIGN KEY references(User(userID)),"
+				"userID INTEGER PRIMARY KEY,"
 				"itemName TEXT,"
 				"price INTEGER);";
 
@@ -628,30 +662,30 @@ static int createTable(const char* s) {
 			exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 			if (exit != SQLITE_OK) {
 				std::cout << "\nError While Creating Table:" << Error;
+				logs("error on Marketplace table", 2);
 				sqlite3_free(Error);
 			}
 			else {
-				//logs("Marketplace Database table Created Successfully", 1);
+				logs("Marketplace Database table Created Successfully", 1);
 				query = "CREATE TABLE IF NOT EXISTS Inventory ("
 					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
-					"item int FOREIGN KEY REFERENCES ItemDB(itemID),"
+					"item INTEGER,"
 					"amount INTEGER);";
 
 				exit = sqlite3_open(s, &db);
 				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 				if (exit != SQLITE_OK) {
 					std::cout << "\nError While Creating Table:" << Error;
+					logs("error on  table", 2);
 					sqlite3_free(Error);
 				}
 				else {
-					//logs("Inventory table was created successfully!", 1);
+					logs("Inventory table was created successfully!", 1);
 
 
 
 				}
-
 			}
-		}
 	}
 
 	sqlite3_close(db);
@@ -663,14 +697,14 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 	std::ofstream data;
 	for (int i = 0; i < argc; i++) {
 
-		data.open("c://data.txt", std::ios::app);
+		data.open("c://data.txt");
 		if (data.is_open()) {
 			data << " " << argv[i];
-			//	i++;
+				i++;
+		
 		}
-
-			std::cout << azColName[i] << " -> " << argv[i] << std::endl;
-
+		std::cout << "|" << azColName[i] << " -> " << argv[i] << "|" << std::endl;
+		std::cout << "-------------\n";
 	}
 
 	//std::cout << std::endl;
