@@ -11,9 +11,9 @@ bool isLoginned = false;
 int isChecked = false;
 bool database_created = false;
 const char* dir = "c://Database.db";
-bool isBeta = true;
+static bool isBeta = true;
 bool advanced_mode = false;
-std::string version = "1.0.7";
+static std::string version = "1.0.7";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -66,9 +66,17 @@ public:
 	int edit_marketplace_item = 0;
 	std::string data;
 	std::string data1;
+	std::string data2;
+	std::string data3;
+	int uid;
 
 
 }user;
+struct {
+public:
+	std::string item_name;
+	int item_price;
+}market;
 
 struct {
 public:
@@ -163,6 +171,15 @@ bool Register() {
 
 		}
 		else
+			save = "INSERT INTO Inventory (item, amount) VALUES ('dirt', 1)";
+		exit = sqlite3_exec(DB, save.c_str(), callback, 0, &messageError);
+		if (exit != SQLITE_OK) {
+			std::cout << "oops:" << messageError;
+			
+		}
+		else 
+		
+		
 		logs("registration succesfull!", 1);
 		Sleep(2000);
 		main(dir);
@@ -314,6 +331,55 @@ void additem_marketplace() {
 	}
 
 }
+void confirm_market_purchase() {
+	int desired_price;
+	int user_funds;	
+	sqlite3* db;
+	char* messageError;
+	int exit = sqlite3_open(dir, &db);
+	std::string fetch_funds = "SELECT cash FROM User WHERE username ='" + username + "';";
+	exit = sqlite3_exec(db, fetch_funds.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+	std::cout << messageError;
+		Sleep(2000);
+		Marketplace();
+	}
+	else {
+		user_funds = stoi(user.data1); //converts user.data1 (string) into integer so that we could count it
+		if (user_funds < market.item_price)
+		{
+			logs("you have insufficient funds", 2);
+			system("pause");
+		}
+		else
+		{
+			std::string fetch_uid = "SELECT id FROM User WHERE username = '" + username + "'";
+			exit = sqlite3_exec(db, fetch_uid.c_str(), callback, 0, &messageError);
+			if (exit != SQLITE_OK) {
+				std::cout << messageError;
+				Sleep(2000);
+				Marketplace();
+			
+			}
+			else {
+				//user.uid = stoi(user.data1);
+				std::string add_inv = "UPDATE Inventory SET item =" + market.item_name + ", amount = 1 WHERE userID = " + user.data1 + ";";
+				exit = sqlite3_exec(db, add_inv.c_str(), callback, 0, &messageError);
+				if (exit != SQLITE_OK) {
+					std::cout << messageError;
+					Sleep(2000);
+					Marketplace();
+				}
+				else {
+					logs("Thank you for purchasing", 1);
+					Sleep(2000);
+					userPanel();
+				}
+			}
+		}
+	}
+
+}
 void buy_marketplace_item() {
 	int price;
 	sqlite3* DB;
@@ -332,12 +398,17 @@ void buy_marketplace_item() {
 		else {
 
 		//	system("pause");
-			std::cout << "Selected item is:" << user.data << " cost: $" << user.data1 << "\n";
-			std::cout << "Do you confirm this purchase? type: \"purchase\"\n\n:";
+			market.item_name = user.data;
+			market.item_price = stoi(user.data1);
+			color(8); std::cout << "Selected item is: "; color(14); std::cout << market.item_name; color(8); std::cout<< "\ncost: $"; color(14); std::cout << market.item_price << "\n";
+			std::cout << "Do you confirm this purchase? type: \"confirm\". To go back, type: \"back\"\n\n:";
 			std::string ans;
 			std::cin >> ans;
-			if (ans == "purchase") {
-			//TODO purchase 
+			if (ans == "confirm") {
+				confirm_market_purchase();
+				}
+			if (ans == "back") {
+				Marketplace();
 			}
 			
 		}
@@ -356,7 +427,7 @@ void view_marketplace() {
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
-	std::string query = "SELECT * FROM Marketplace";
+	std::string query = "SELECT itemName, price FROM Marketplace";
 	exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
 		std::cout << "Unable to view marketplace, " << messageError;
@@ -700,10 +771,9 @@ static int createTable(const char* s) {
 			else {
 				logs("Marketplace Database table Created Successfully", 1);
 				query = "CREATE TABLE IF NOT EXISTS Inventory ("
-					"userID INTEGER,"
-					"item INTEGER,"
-					"amount INTEGER",
-					"FOREIGN KEY (userID) REFERENCES User(UserID));";
+					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+					"item TEXT,"
+					"amount INTEGER);";
 
 				exit = sqlite3_open(s, &db);
 				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
@@ -736,12 +806,14 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 				//i++;
 		
 		}
-		
-		std::cout << "|" << azColName[i] << " -> " << argv[i] << "|" << std::endl;
+
+		std::cout << "\n|" << azColName[i] << " -> " << argv[i] << "|" << std::endl;
 
 
 		user.data = argv[0];
 		user.data1 = argv[i];
+
+
 	}
 	
 	//std::cout << std::endl;
