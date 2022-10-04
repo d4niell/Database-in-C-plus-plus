@@ -58,6 +58,8 @@ public:
 	int cash;
 	int marketplaceAns;
 	std::string item;
+	int view_marketplace;
+	int add_item_marketplace;
 
 }user;
 
@@ -105,7 +107,11 @@ bool logs(std::string message, int type) { //prints out logs
 		color(8);
 		break;
 	}
-
+	std::ofstream logs;
+	logs.open("dbincpp_logs.txt", std::ios::app);
+	if (logs.is_open()) {
+		logs << "dbincpp << [" << message << "]\n";
+	}
 
 	return 0;
 }
@@ -250,38 +256,58 @@ void fetchcashAmount() {
 	system("pause");
 }
 void additem_marketplace() {
+	std::string item_name;
+	sqlite3* DB;
+	std::string item_price;
+	char* messageError;
+	int exit = sqlite3_open(dir, &DB);
+	userInput(1, 6, "select item", "a", "b", "c");
+	switch (user.add_item_marketplace) {
+	case 1:
+		std::cout << "Select a name:"; std::cin >> item_name;
+		if (item_name.length() >= 1) {
+			std::cout << "\nSelect a price for:" << item_name << "\n> "; std::cin >> item_price;
+			if (item_price.length() > 0) {
+				logs("adding item.", 1);
+				std::string query = "INSERT INTO Marketplace (itemName, price) VALUES ('" + item_name + "'," + item_price + ");";
+				exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
+				if (exit != SQLITE_OK) {
+					std::cout << "oops:" << messageError;
+					Sleep(2000);
+				}
+				//std::cout << query;
+				system("pause");
+			}
+			
+		}
+		break;
+	}
+
+}
+void view_marketplace() {
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
-
-	std::string query1 = "SELECT id FROM User WHERE username = '" + username + "';";
-	exit = sqlite3_exec(DB, query1.c_str(), callback, 0, &messageError);
+	std::string query = "SELECT * FROM Marketplace";
+	int select_item;
+	std::string item_name = "test";
+	int item_price = 10;
+	int items = 10; //item amount (marketplace)
+	logs(items + " found.", 1);
+	exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
-		std::cerr << "Error in selectData function." << std::endl;
-
-		sqlite3_free(messageError);
+		std::cout << "oops:" << messageError;
 	}
-	else {
-		std::fstream fetchUID;
-		fetchUID.open("c://data.txt");
-		if (!fetchUID.is_open()) {
-			perror("Something bad happened:");
-			system("pause");
-		}
-		else {
-			while (getline(fetchUID, line)) {
 
-				std::cout << line;
+		std::fstream itemsDB;
+		itemsDB.open("c://data.txt");
+		if (itemsDB.is_open()) {
+			std::string lines;
+			while (getline(itemsDB, lines)) {
+				std::cout << lines;
 				system("pause");
-				fetchUID.close();
-				//system("pause");
-				remove("c://data.txt");
-				//userPanel();
-
 			}
-
 		}
-	}
 
 }
 void Marketplace() {
@@ -290,13 +316,10 @@ void Marketplace() {
 	userInput(0, 4, "View Marketplace", "Add Item", "Delete Item", "Exit");
 	switch (user.marketplaceAns) {
 	case 1:
+		view_marketplace();
 		break;
 	case 2:
-		int itemprice;
-		std::cout << "Select an item to sell\n"; std::cin >> user.item; std::cout << "\nSelect a price for the item\n:"; std::cin >> itemprice;
-		if (itemprice > 1) {
 			additem_marketplace();
-		}
 		break;
 	case 3:
 		break;
@@ -465,12 +488,17 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	case 4:
 		user.marketplaceAns = ans;
 		break;
+	case 5:
+		user.view_marketplace = ans;
+	case 6:
+		user.add_item_marketplace = ans;
 	}
 
 }
 
 
 int main(const char* s) {
+	//view_marketplace();
 	system("title dbincpp (top codenz $$$$$)");
 
 	if (isChecked == false) {
@@ -592,8 +620,8 @@ static int createTable(const char* s) {
 		else {
 			//logs("Item Database table Created Successfully", 1);
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
-				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
-				"itemName varchar(20),"
+				"userID INTEGER FOREIGN KEY references(User(userID)),"
+				"itemName TEXT,"
 				"price INTEGER);";
 
 			exit = sqlite3_open(s, &db);
@@ -635,13 +663,13 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 	std::ofstream data;
 	for (int i = 0; i < argc; i++) {
 
-		data.open("c://data.txt");
+		data.open("c://data.txt", std::ios::app);
 		if (data.is_open()) {
 			data << " " << argv[i];
 			//	i++;
 		}
 
-		//	std::cout << azColName[i] << " -> " << argv[i] << std::endl;
+			std::cout << azColName[i] << " -> " << argv[i] << std::endl;
 
 	}
 
