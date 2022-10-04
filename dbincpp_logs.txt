@@ -20,3 +20,119 @@ dbincpp << [Marketplace Database table Created Successfully]
 
 dbincpp << [Inventory table was created successfully!]
 
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [registration succesfull!]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [Inventory table was created successfully!]
+
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [User table Created Successfully]
+
+dbincpp << [Marketplace Database table Created Successfully]
+
+dbincpp << [error on  table]
+

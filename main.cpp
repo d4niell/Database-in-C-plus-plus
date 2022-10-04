@@ -10,8 +10,7 @@ int isAdmin = 0;
 bool isLoginned = false;
 int isChecked = false;
 bool database_created = false;
-char** argv;
-const char* dir = "c:\\Database.db";
+const char* dir = "c://Database.db";
 bool isBeta = true;
 bool advanced_mode = false;
 std::string version = "1.0.7";
@@ -23,6 +22,7 @@ void SettingsTab();
 std::vector<std::string> lines;
 void fetchcashAmount();
 void Checkforsettings();
+void Marketplace();
 void userPanel();
 std::string line;
 void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4);
@@ -53,17 +53,30 @@ void SaveData_local(std::string message) {
 }*/
 struct {
 public:
-	int mainAns;
-	int userpanelAns;
-	int ATMAns;
-	int cash;
-	int marketplaceAns;
-	std::string item;
-	int view_marketplace;
-	int add_item_marketplace;
-	int view_marketplace_edit;
+	int mainAns = 0;
+	int userpanelAns = 0;
+	int ATMAns = 0;
+	int cash = 0;
+	int marketplaceAns = 0;
+	std::string item = "";
+	int view_marketplace = 0;
+	int add_marketplace_item = 0;
+	int view_marketplace_edit = 0;
+	int Settings_tab = 0;
+	int edit_marketplace_item = 0;
+	std::string data;
+	std::string data1;
+
 
 }user;
+
+struct {
+public:
+	char** callback;
+
+
+
+}db;
 
 BOOL CheckforPrivilege() {
 	BOOL fRet = FALSE;
@@ -279,7 +292,7 @@ void additem_marketplace() {
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
 	userInput(1, 6, "select item", "a", "b", "c");
-	switch (user.add_item_marketplace) {
+	switch (user.add_marketplace_item) {
 	case 1:
 		std::cout << "Select a name:"; std::cin >> item_name;
 		if (item_name.length() >= 1) {
@@ -293,7 +306,7 @@ void additem_marketplace() {
 					Sleep(2000);
 				}
 				//std::cout << query;
-				system("pause");
+				Marketplace();
 			}
 			
 		}
@@ -301,42 +314,71 @@ void additem_marketplace() {
 	}
 
 }
+void buy_marketplace_item() {
+	int price;
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(dir, &DB);
+	std::string name;
+	std::cout << "name:"; std::cin >> name;
+	if (name.length() >= 1) {
+		std::string query = "SELECT itemName, price from Marketplace WHERE itemName ='" + name + "';";
+		exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
+		if (exit != SQLITE_OK) {
+			std::cout << messageError;
+			Sleep(2000);
+			userPanel();
+		}
+		else {
+
+		//	system("pause");
+			std::cout << "Selected item is:" << user.data << " cost: $" << user.data1 << "\n";
+			std::cout << "Do you confirm this purchase? type: \"purchase\"\n\n:";
+			std::string ans;
+			std::cin >> ans;
+			if (ans == "purchase") {
+			//TODO purchase 
+			}
+			
+		}
+
+	}
+
+}
+void edit_marketplace_item() {
+	userInput(1, 9, "", "", "", "");
+
+}
+void delete_marketplace_item() {
+
+}
 void view_marketplace() {
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
 	std::string query = "SELECT * FROM Marketplace";
-	int select_item;
-	std::string item_name;
-	std::string item_price;
-	int items = 10; //item amount (marketplace)
-	logs(items + " found.", 1);
-	std::cout << "=============ITEM LIST=============\n";
 	exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
 	if (exit != SQLITE_OK) {
-		std::cout << "oops:" << messageError;
+		std::cout << "Unable to view marketplace, " << messageError;
 	}
-	std::cout << "=============ITEM LIST=============";
-	userInput(0, 7,"Buy Item", "Delete Item", "c", "d");
+	else 
+		logs("Welcome to the marketplace", 1);
+	userInput(0, 7, "Buy Item", "Edit Item", "Delete Item", "Back");
 	switch (user.view_marketplace_edit) {
 	case 1:
-		
-		std::cout << "name of the item:"; std::cin >> item_name;
-		query = "SELECT price FROM Marketplace WHERE itemName = '" + item_name + "'";
-		exit = sqlite3_exec(DB, query.c_str(), callback, 0, &messageError);
-		std::fstream price_data;
-		price_data.open("c://data.txt");
-		if (price_data.is_open()) {
-			std::string line;
-			while (getline(price_data, line)) {
-				item_price = line;
-				std::cout << "this item costs $" << item_price << " do you want to buy this?";
-				system("pause");
-			}
-		}
+		buy_marketplace_item();
 		break;
-
+	case 2:
+		edit_marketplace_item();
+		break;
+	case 3:
+		delete_marketplace_item();
+		break;
+	case 4:
+		userPanel();
+		break;
 	}
+	
 }
 void Marketplace() {
 
@@ -420,40 +462,20 @@ bool Login() {
 	}
 	else
 		if (username.length() > 3 && password.length() > 3) {
-			std::fstream credentials;
-			credentials.open("c://data.txt"); //this will be changed to some better way (not urgent as of now)
-			//std::string line;
-			if (!credentials.is_open()) {
-				perror("Something bad happened:");
-			}
-			else {
-				while (getline(credentials, line)) {
-					std::vector<std::string> lines;
-					lines.push_back(line);
-					for (const auto& i : lines) {
-						if (line.find(username)) {
-							Sleep(200);
-							if (line.find(password)) {
-								credentials.close();
-								//	system("pause");
-								remove("c://data.txt");
-								userPanel();
-								}
-							
-
-						}
-						else {
-							//std::cout << "Invalid Credentials...";
-							logs("Invalid Credentials", 2);
-							Sleep(2000);
-							main(dir);
-						}
-
-					}
+			if (!user.data.find(username)) {
+				if (!user.data1.find(password)) {
+					std::cout << user.data1 << " " << user.data;
+					//system("pause");
+					userPanel();
 				}
-
-
 			}
+			else
+			{
+				logs("Invalid Username/password", 2);
+				Sleep(1000);
+				Login();
+			}
+			
 
 		}
 		else {
@@ -484,12 +506,13 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 		title += " Beta";
 	}
 	color(5);
-	std::cout << title;
+	std::cout << title << std::endl;
 	color(8);
-	std::cout << "\n	[1]"; color(7); std::cout << o1; color(8);
-	std::cout << "\n	[2]"; color(7); std::cout << o2; color(8);
-	std::cout << "\n	[3]"; color(7); std::cout << o3; color(8);
-	std::cout << "\n	[4]"; color(7); std::cout << o4; color(8);
+
+	std::cout << "\n|	[1]"; color(7); std::cout << o1; color(8);
+	std::cout << "\n|	[2]"; color(7); std::cout << o2; color(8);
+	std::cout << "\n|	[3]"; color(7); std::cout << o3; color(8);
+	std::cout << "\n|	[4]"; color(7); std::cout << o4; color(8);
 	color(14); std::cout << "\n		> "; std::cin >> ans;
 	switch (ans) {
 	case 1:
@@ -519,23 +542,32 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	}
 	switch (type) {
 	case 1:
-		user.mainAns = ans;
+		user.mainAns = ans; //for main function
 		break;
 	case 2:
-		user.userpanelAns = ans;
+		user.userpanelAns = ans; //for user panel function
 		break;
 	case 3:
-		user.ATMAns = ans;
+		user.ATMAns = ans; //for atm function
 		break;
 	case 4:
-		user.marketplaceAns = ans;
+		user.marketplaceAns = ans; //for market main function
 		break;
 	case 5:
-		user.view_marketplace = ans;
+		user.view_marketplace = ans; //view marketplace function
+		break;
 	case 6:
-		user.add_item_marketplace = ans;
+		user.add_marketplace_item = ans; //add item fucntion
+		break;
 	case 7:
-		user.view_marketplace_edit = ans;
+		user.view_marketplace_edit = ans; //view marketplace function
+		break;
+	case 8:
+		user.Settings_tab = ans; //settings tab function
+		break;
+	case 9:
+		user.edit_marketplace_item = ans;
+		break;
 	}
 
 }
@@ -654,7 +686,7 @@ static int createTable(const char* s) {
 	else {
 		logs("User table Created Successfully", 1);	
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
-				"userID INTEGER PRIMARY KEY,"
+				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
 				"itemName TEXT,"
 				"price INTEGER);";
 
@@ -668,9 +700,10 @@ static int createTable(const char* s) {
 			else {
 				logs("Marketplace Database table Created Successfully", 1);
 				query = "CREATE TABLE IF NOT EXISTS Inventory ("
-					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+					"userID INTEGER,"
 					"item INTEGER,"
-					"amount INTEGER);";
+					"amount INTEGER",
+					"FOREIGN KEY (userID) REFERENCES User(UserID));";
 
 				exit = sqlite3_open(s, &db);
 				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
@@ -700,44 +733,36 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 		data.open("c://data.txt");
 		if (data.is_open()) {
 			data << " " << argv[i];
-				i++;
+				//i++;
 		
 		}
+		
 		std::cout << "|" << azColName[i] << " -> " << argv[i] << "|" << std::endl;
-		std::cout << "-------------\n";
-	}
 
+
+		user.data = argv[0];
+		user.data1 = argv[i];
+	}
+	
 	//std::cout << std::endl;
 	data.close();
 	return 0;
 }
 void SettingsTab() {
-	int sans = 0;
-	system("cls");
-	logs("Here you can customize this application as you desire", 1);
-	std::cout << "\n\n[0] Advanced Mode (enable commands) \n\n-> ";
-	color(14);
-	std::cin >> sans;
-	if (sans == 0) {
-		logs("note that this will disable all the visual options to make the application look cleaner but this is mainly for dev", 1);
-		color(8);
-		logs("[1 yes/ 2 no]Are you sure you want to enable this? You can revert this at any time in settings.", 2);
-		int sans1 = 0;
-		color(14);
-		std::cin >> sans1;
-		if (sans1 == 1) {
-			std::ofstream advanced_mode;
-			advanced_mode.open("c://dbincpp_settings.txt");
-			if (advanced_mode.is_open()) {
-				advanced_mode << "1";
-				advanced_mode.close();
-
-			}
-
-		}
-
+	userInput(1, 8, "Advanced Mode (W.I.P)", "Clear Logs", "Color Changer", "Back");
+	switch (user.Settings_tab) {
+	case 1:
+		system("pause");
+		break;
+	case 2:
+		remove("dbincpp_logs.txt");
+		logs("Logs saved succesfully", 1);
+			break;
+		case 3:
+			break;
+		case 4:
+			break;
 	}
-
 
 }
 void Checkforsettings() {
