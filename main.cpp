@@ -68,7 +68,8 @@ public:
 	std::string data1;
 	std::string data2;
 	std::string data3;
-	int uid;
+	std::string uid;
+	int money;
 
 
 }user;
@@ -259,7 +260,7 @@ void ATM() {
 	//	fetchcashAmount();
 		//highlighter("Welcome back, ", username);
 		//std::cout << "\nYou Currently have: $" << user.cash << "\n";
-	userInput(1, 3, "Withdraw", "Deposit", "Manipulate money", "Exit");
+	userInput(0, 3, "Withdraw", "Deposit", "Manipulate money", "Exit");
 	std::string amount;
 	switch (user.ATMAns) {
 	case 1:
@@ -283,25 +284,6 @@ void ATM() {
 
 
 }
-void fetchcashAmount() {
-	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
-	selectData(dir, query);
-	std::fstream data;
-	data.open("c://data.txt");
-	if (data.is_open()) {
-		std::string line;
-		while (getline(data, line)) {
-			std::vector<std::string> lines;
-			lines.push_back(line);
-			for (const auto& i : lines) {
-				int i_line = std::stoi(line, nullptr, 2);
-				user.cash = i_line;
-			}
-		}
-
-	}
-	system("pause");
-}
 void additem_marketplace() {
 	std::string item_name;
 	sqlite3* DB;
@@ -321,6 +303,7 @@ void additem_marketplace() {
 				if (exit != SQLITE_OK) {
 					std::cout << "oops:" << messageError;
 					Sleep(2000);
+					userPanel();
 				}
 				//std::cout << query;
 				Marketplace();
@@ -337,33 +320,21 @@ void confirm_market_purchase() {
 	sqlite3* db;
 	char* messageError;
 	int exit = sqlite3_open(dir, &db);
-	std::string fetch_funds = "SELECT cash FROM User WHERE username ='" + username + "';";
-	exit = sqlite3_exec(db, fetch_funds.c_str(), callback, 0, &messageError);
-	if (exit != SQLITE_OK) {
-	std::cout << messageError;
-		Sleep(2000);
-		Marketplace();
-	}
-	else {
-		user_funds = stoi(user.data1); //converts user.data1 (string) into integer so that we could count it
-		if (user_funds < market.item_price)
+
+		std::cout << user.cash << "<<" << market.item_price;
+		Sleep(1000);
+		if (user.cash < market.item_price) //compares the market place item's desired price if the user has enough money
 		{
 			logs("you have insufficient funds", 2);
 			system("pause");
 		}
 		else
 		{
-			std::string fetch_uid = "SELECT id FROM User WHERE username = '" + username + "'";
-			exit = sqlite3_exec(db, fetch_uid.c_str(), callback, 0, &messageError);
-			if (exit != SQLITE_OK) {
-				std::cout << messageError;
+			std::string i_uid;
+				user.uid = stoi(i_uid);
 				Sleep(2000);
-				Marketplace();
-			
-			}
-			else {
-				//user.uid = stoi(user.data1);
-				std::string add_inv = "UPDATE Inventory SET item =" + market.item_name + ", amount = 1 WHERE userID = " + user.data1 + ";";
+				std::string add_inv = "UPDATE Inventory SET item =" + market.item_name + ", amount = 1 WHERE userID = " + i_uid + ";";
+				Sleep(1000);
 				exit = sqlite3_exec(db, add_inv.c_str(), callback, 0, &messageError);
 				if (exit != SQLITE_OK) {
 					std::cout << messageError;
@@ -375,9 +346,7 @@ void confirm_market_purchase() {
 					Sleep(2000);
 					userPanel();
 				}
-			}
 		}
-	}
 
 }
 void buy_marketplace_item() {
@@ -424,6 +393,8 @@ void delete_marketplace_item() {
 
 }
 void view_marketplace() {
+	system("cls");
+	color(8);
 	sqlite3* DB;
 	char* messageError;
 	int exit = sqlite3_open(dir, &DB);
@@ -434,6 +405,7 @@ void view_marketplace() {
 	}
 	else 
 		logs("Welcome to the marketplace", 1);
+	std::cout << "you currently have: $"; color(14); std::cout << user.cash; color(8);
 	userInput(0, 7, "Buy Item", "Edit Item", "Delete Item", "Back");
 	switch (user.view_marketplace_edit) {
 	case 1:
@@ -454,7 +426,7 @@ void view_marketplace() {
 void Marketplace() {
 
 	logs("Here you can buy/sell items. This feature is still in beta!", 1);
-	userInput(0, 4, "View Marketplace", "Add Item", "Delete Item", "Exit");
+	userInput(0, 4, "View Marketplace", "Add Item", "Back", "Exit");
 	switch (user.marketplaceAns) {
 	case 1:
 		view_marketplace();
@@ -463,6 +435,7 @@ void Marketplace() {
 			additem_marketplace();
 		break;
 	case 3:
+		userPanel();
 		break;
 	case 4:
 		userPanel();
@@ -473,24 +446,66 @@ void Marketplace() {
 	}
 
 }
+void Inventory() {
+	sqlite3* db;
+	char* messageError;
+	int exit = sqlite3_open(dir, &db);
+	std::string query = "SELECT * FROM Inventory WHERE userID = " + user.uid+";";
+	std::cout << user.uid;
+	system("pause");
+	sqlite3_exec(db, query.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		logs("Couldn't fetch user inventory", 3);
+		std::cout << "\n> " << messageError;
+		Sleep(2000);
+		userPanel();
+	}
+	else
+	{
+		system("pause");
+	}
+}
+void fetchUID() {
+	sqlite3* db;
+	char* messageError;
+	int exit = sqlite3_open(dir, &db);
+	std::string query = "SELECT id FROM User WHERE username = '" +username+ "';";
+	sqlite3_exec(db, query.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		logs("Couldn't fetch userID", 3);
+		std::cout << "\n> " << messageError;
+		Sleep(2000);
+		main(dir);
+	}
+	else {
+		user.uid = user.data1;
+	}
+}
+void fetchCASH() {
+	sqlite3* db;
+	char* messageError;
+	int exit = sqlite3_open(dir, &db);
+	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
+	sqlite3_exec(db, query.c_str(), callback, 0, &messageError);
+	if (exit != SQLITE_OK) {
+		logs("Couldn't fetch user cash", 3);
+		std::cout << "\n> " << messageError;
+		Sleep(2000);
+		main(dir);
+	}
+	else
+	{
+		user.cash = stoi(user.data1);
+	}
 
+}
 void userPanel() {
+	fetchUID();
+	fetchCASH();
 	system("cls");
-	std::string welcome_message = "Welcome back, " + username;
-	if (username == "admin" || "d4niel") { //checks for admin
-		isAdmin == 1;
-	}
-	//fetchcashAmount();
-	//int userans;
-	if (isAdmin == 1) {
-		welcome_message += " isAdmin = true";
-	}
-	std::cout << welcome_message;
-
-
+	std::cout << "Username: "; color(14); std::cout << username; color(8); std::cout << "| UID: "; color(14); std::cout << user.uid; color(8); std::cout << "| Cash: "; color(14); std::cout << user.cash; color(8);
 	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Log out");
-
-	system("title dbincpp Userpanel");
+	system("title dbincpp Userpanel");	
 	switch (user.userpanelAns) {
 	case 1:
 		//system("cls");
@@ -501,6 +516,7 @@ void userPanel() {
 		Marketplace();
 		break;
 	case 3:
+		Inventory();
 		break;
 	case 4:
 		main(dir);
