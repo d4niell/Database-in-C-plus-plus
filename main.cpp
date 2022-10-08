@@ -103,7 +103,7 @@ public:
 	char** callback;
 }db;
 
-BOOL CheckforPrivilege() {
+BOOL CheckforPrivilege() { //checks for admin privieleges
 	BOOL fRet = FALSE;
 	HANDLE hToken = NULL;
 	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
@@ -123,7 +123,7 @@ BOOL CheckforPrivilege() {
 
 }
 
-void color(int color) {
+void color(int color) { //with this fucntion we can change the console color (normally the whole console changes it's color, this function makes it so you can change even 1 word to different color
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, color);
 
@@ -185,9 +185,6 @@ static int insertData(const char* s, std::string sql)
 {
 	sqlite3* DB;
 	char* messageError;
-
-
-
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here */
 	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
@@ -202,9 +199,6 @@ static int selectData(const char* s, std::string sql)
 {
 	sqlite3* DB;
 	char* messageError;
-
-
-
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
 	exit = sqlite3_exec(DB, sql.c_str(), callback, 0, &messageError);
@@ -216,14 +210,14 @@ static int selectData(const char* s, std::string sql)
 	else
 	return 0;
 }
-void highlighter(std::string message, std::string highlightedMessage) {
+void highlighter(std::string message, std::string highlightedMessage) { //useless for now
 	std::cout << message; color(14); std::cout << highlightedMessage << "\n\n"; color(8);
 }
 void Addmoney(std::string username, std::string amount) {
 	std::string::size_type sz;
 	std::string sql = "UPDATE User SET cash =" + amount + " WHERE username = '" + username + "';";
 	insertData(dir, sql);
-	int i_amount = std::stoi(amount, &sz);
+	int i_amount = std::stoi(amount, &sz); //converts amount to int so that we can count it
 		logs("Money was added successfully!", 1);
 		userPanel();	
 }
@@ -237,7 +231,7 @@ void view_ATM_purchase_history() {
 	else {
 		logs("Purchase History", 1);
 		std::string line;
-		while (getline(myfile, line)) {
+		while (getline(myfile, line)) { //getline loop 
 			
 			std::cout << "------------------->"; color(14); std::cout << line << std::endl; color(8);
 			std::cout << "\n\n";
@@ -275,10 +269,10 @@ void sendMoney() {
 		int new_user_amount = u_user_amount + amount;
 		int local_user_amount = user.cash - amount;
 		std::ostringstream str2;
-		str2 << local_user_amount;
-		str1 << new_user_amount;
-		std::string i_pay_amount = str1.str();
-		std::string local_amount = str2.str();
+		str2 << local_user_amount;// storing local_user_amount to str2 so that we can use it on querys
+		str1 << new_user_amount; // storgin new_user_amount to str1 so that we can use it on querys
+		std::string i_pay_amount = str1.str(); // this function converts new_user_amount (which we stored into str1) into string so we can use it on querys
+		std::string local_amount = str2.str(); // /--/
 		std::cout << i_pay_amount << " " << u_username;
 		 query_1 = "UPDATE User SET cash = " + local_amount + " WHERE username = '" + username + "';";
 		insertData(dir, query_1);
@@ -296,8 +290,8 @@ void sendMoney() {
 void ATM() {
 	//	fetchcashAmount();
 		//highlighter("Welcome back, ", username);
-		//std::cout << "\nYou Currently have: $" << user.cash << "\n";
-	userInput(0, 3, "View History", "Send Money", "Manipulate money", "Exit");
+	color(8); std::cout << "\nYou Currently have: $"; color(14); std::cout << user.cash << "\n"; color(8);
+	userInput(0, 3, "View History", "Send Money", "Manipulate money", "Back");
 	std::string amount;
 	switch (user.ATMAns) {
 	case 1:
@@ -313,17 +307,14 @@ void ATM() {
 		Addmoney(username, amount);
 		break;
 	case 4:
-
+		userPanel();
 		break;
-
 	}
-
-
 }
 void additem_marketplace() {
 	std::string item_name;
 	std::string item_price;
-	userInput(1, 6, "select item", "back", "c", "d");
+	userInput(1, 6, "Select Item", "View Marketplace", "ATM", "Back");
 	switch (user.add_marketplace_item) {
 	case 1:
 		color(8); 
@@ -342,7 +333,14 @@ void additem_marketplace() {
 		}
 		break;
 	case 2:
-		Marketplace();
+		view_marketplace();
+		break;
+	case 3:
+		ATM();
+		break;
+	case 4:
+
+		break;
 	}
 
 }
@@ -361,8 +359,8 @@ void confirm_market_purchase() {
 				insertData(dir, add_inv);
 					std::ostringstream str1;
 					int pay_amount = user.cash - market.item_price;
-					str1 << pay_amount;
-					std::string i_pay_amount = str1.str();
+					str1 << pay_amount; //stores pay_amount into str1
+					std::string i_pay_amount = str1.str(); //converts pay_amount which is stored in str1 into i_pay_amount (string)
 					std::string query = "UPDATE User SET cash = " + i_pay_amount + " WHERE id =" + user.uid + ";";
 					insertData(dir, query);
 					std::cout << "\n";
@@ -387,7 +385,7 @@ void buy_marketplace_item() {
 		//	system("pause");
 			market.item_name = user.data;
 			market.item_price = stoi(user.data1);
-			color(8); std::cout << "Selected item is: "; color(14); std::cout << market.item_name; color(8); std::cout<< "\ncost: $"; color(14); std::cout << market.item_price << "\n";
+			color(8); std::cout << "\nSelected item is: "; color(14); std::cout << market.item_name; color(8); std::cout<< "\ncost: $"; color(14); std::cout << market.item_price << "\n";
 			color(8); std::cout << "Do you confirm this purchase? type: \""; color(14); std::cout << "confirm"; color(8); std::cout << "\". To go back, type: \""; color(14); std::cout << "back"; color(8);std::cout << "\"\n\n:";
 			std::string ans;
 			color(14);
@@ -428,7 +426,7 @@ back:
 	}
 }
 void edit_marketplace() {
-	userInput(1, 9, "Edit price", "Delete Item", "Back", "Exit");
+	userInput(1, 9, "Edit price", "Delete Item", "View Marketplace", "Back");
 	switch (user.edit_marketplace_item) {
 	case 1:
 		edit_marketplace_price();
@@ -437,14 +435,11 @@ void edit_marketplace() {
 		delete_marketplace_item();
 		break;
 	case 3:
-		Marketplace();
+		view_marketplace();
 		break;
 	case 4:
-		main(dir);
+		Marketplace();
 		break;
-
-	
-	
 	}
 }
 void delete_marketplace_item() {
@@ -476,9 +471,11 @@ void view_marketplace() {
 	system("cls");
 	color(8);
 	std::string query = "SELECT itemName, price FROM Marketplace";
+	color(14);
 	selectData(dir, query);
+	color(8);
 	std::cout << "\nyou currently have: $"; color(14); std::cout << user.cash; color(8);
-	userInput(0, 7, "Buy Item", "Edit Item", "Back", "Exit");
+	userInput(0, 7, "Buy Item", "Edit Item", "Get Money", "Back");
 	switch (user.view_marketplace_edit) {
 	case 1:
 		buy_marketplace_item();
@@ -487,13 +484,13 @@ void view_marketplace() {
 		edit_marketplace();
 		break;
 	case 3:
-		Marketplace();
+		user.ATMAns = 3;
+		ATM();
 		break;
 	case 4:
-		main(dir);
+		Marketplace();
 		break;
 	}
-	
 }
 void Marketplace() {
 	userInput(0, 4, "View Marketplace", "Add Item", "Back", "Exit");
@@ -511,35 +508,34 @@ void Marketplace() {
 		userPanel();
 		break;
 	}
-
 }
 void Inventory() {
 	std::string query = "SELECT item, amount FROM Inventory WHERE userID = " + user.uid+";";
+	color(14);
 	selectData(dir, query);
-	userInput(0, 10, "View Item", "Marketplace", "ATM", "Back");
+	color(8);
+	userInput(0, 10, "Buy Item(s)", "List Item(s)", "View Purchase History", "Back");
 	switch (user.inventory_input) {
 	case 1:
-		//TODO
+		view_marketplace();
 		break;
 	case 2:
-		Marketplace();
+		additem_marketplace();
 		break;
 	case 3:
-		ATM();
+		view_ATM_purchase_history();
 		break;
 	case 4:
 		userPanel();
 		break;
-	
-	
 	}
 }
-void fetchUID() {
+void fetchUID() { //gets the user UID for info panel and saves the variable for future functions
 	std::string query = "SELECT id FROM User WHERE username = '" +username+ "';";
 	selectData(dir, query);
 		user.uid = user.data1;
 }
-void fetchCASH() {
+void fetchCASH() { // same thing but does it for cash
 	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
 	selectData(dir, query);
 		user.cash = stoi(user.data1);
@@ -565,12 +561,15 @@ void send_message() {
 }
 void view_messages() {
 	std::string u_sender;
-	std::string query = "SELECT senderID, message FROM Messages WHERE receiverID = " + user.uid + ";";
+	std::string query = "SELECT senderID, message FROM Messages WHERE receiverID = " + user.uid + ";"; //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
+	color(14);
 	selectData(dir, query);
-	std::cout << "\nFROM:";
+	color(8); std::cout << "\nFROM:";
+	color(14);
 	u_sender = user.data;
-	query = "SELECT username FROM User WHERE id = " + u_sender + ";";
+	query = "SELECT username FROM User WHERE id = " + u_sender + ";"; // now we can search the username by the UID
 	selectData(dir, query);
+	color(8);
 	Messages();
 
 }
@@ -592,13 +591,13 @@ void Messages() {
 
 }
 void userPanel() {
-	time_t now = time(0);
-	char* dt = ctime(&now);
-	fetchUID();
-	fetchCASH();
+	time_t now = time(0); //for time
+	char* dt = ctime(&now); //for time
+	fetchUID(); //calling these functions instantly once in userpanel
+	fetchCASH(); //-//
 	//fetchMessages();
 	system("cls");
-	color(8); std::cout << "> "; color(11); std::cout << dt;
+	color(8); std::cout << "> "; color(11); std::cout << dt; //prints out the time from ctime
 	color(8); std::cout << "> {"; color(7);std::cout << "USERNAME: "; color(14); std::cout << username; color(7); std::cout << " | UID : "; color(14); std::cout << user.uid; color(7); std::cout << " | CASH : "; color(14); std::cout << user.cash; color(8); std::cout << "}";
 	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Messages");
 	system("title dbincpp Userpanel");	
@@ -620,7 +619,7 @@ void userPanel() {
 	}
 
 }
-int len(std::string str)
+int len(std::string str) //useless for now
 {
 	int length = 0;
 	for (int i = 0; str[i] != '\0'; i++)
@@ -630,7 +629,7 @@ int len(std::string str)
 	}
 	return length;
 }
-void split(std::string str, char seperator)
+void split(std::string str, char seperator) //useless for now
 {
 	int currIndex = 0, i = 0;
 	int startIndex = 0, endIndex = 0;
@@ -669,7 +668,7 @@ bool Login() {
 		if (username.length() > 3 && password.length() > 3) {
 			if (!user.data.find(username)) {
 				if (!user.data1.find(password)) {
-					if (user.Save_Credentials == true) {
+					if (user.Save_Credentials == true) { //for "save credentials" feature //todo
 						std::ofstream save_data;
 						save_data.open("c://credentials.txt");
 						if (save_data.is_open()) {
@@ -703,7 +702,7 @@ bool Login() {
 	return 0;
 }
 
-void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4) {
+void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4) { //this is the legendary function which replaces all if clauses and other reappearing things such as questions and console inputs
 
 	std::string title = "\n>	dbincpp v[" + version + "]";
 	int ans;
@@ -719,14 +718,14 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	if (isBeta == false) {
 		title += " Beta";
 	}
-	color(5);
-	std::cout << title << std::endl;
+	color(9);
+	std::cout << "\n\n> "; color(7); std::cout << "dbincpp"; color(7); std::cout << " v"; color(8); std::cout << "["; color(5); std::cout << version; color(8);std::cout << "] \n";
 	color(8);
 
-	std::cout << "\n|	[1]"; color(7); std::cout << o1; color(8);
-	std::cout << "\n|	[2]"; color(7); std::cout << o2; color(8);
-	std::cout << "\n|	[3]"; color(7); std::cout << o3; color(8);
-	std::cout << "\n|	[4]"; color(7); std::cout << o4; color(8);
+	std::cout << "\n|	["; color(5); std::cout << "1"; color(8); std::cout << "] "; color(7); std::cout << o1; color(8);
+	std::cout << "\n|	["; color(5); std::cout << "2"; color(8); std::cout << "] "; color(7); std::cout << o2; color(8);
+	std::cout << "\n|	["; color(5); std::cout << "3"; color(8); std::cout << "] "; color(7); std::cout << o3; color(8);
+	std::cout << "\n|	["; color(5); std::cout << "4"; color(8); std::cout << "] "; color(7); std::cout << o4; color(8);
 	color(14); std::cout << "\n		> "; std::cin >> ans; color(8);
 	std::cout << "------------------------------------------------\n";
 	switch (ans) {
@@ -755,7 +754,7 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 
 			break;
 	}
-	switch (type) {
+	switch (type) { //this switch clause indexes the ans from this function to the other functions so that we can use the user input value on different functions
 	case 1:
 		user.mainAns = ans; //for main function
 		break;
