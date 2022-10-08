@@ -136,3 +136,85 @@ dbincpp << [Marketplace Database table Created Successfully]
 
 dbincpp << [error on  table]
 
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [too many failed login attempts]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Purchase History]
+
+dbincpp << [you have insufficient funds]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [message is too short, please avoid spamming]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [message is too short, please avoid spamming]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [message is too short, please avoid spamming]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [message is too short, please avoid spamming]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [message is too short, please avoid spamming]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Message sent succesfully]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+
+dbincpp << [Invalid Username/password]
+
+dbincpp << [You're not logged in, please make sure to do so or register by pressing 2]
+

@@ -12,6 +12,7 @@ std::string strings[max];
 int ans = 0;
 int isAdmin = 0;
 bool isLoginned = false;
+bool findUserInventory(int _id);
 int isChecked = false;
 bool database_created = false;
 const char* dir = "c://Database.db";
@@ -510,7 +511,13 @@ void Marketplace() {
 	}
 }
 void Inventory() {
-	std::string query = "SELECT item, amount FROM Inventory WHERE userID = " + user.uid+";";
+	std::cout << "item name:";
+	std::string query = "SELECT item FROM Inventory WHERE userID = " + user.uid+";";
+	color(14);
+	selectData(dir, query);
+	color(8);
+	std::cout << "quantity:";
+	query = "SELECT amount FROM Inventory WHERE userID = " + user.uid + ";";
 	color(14);
 	selectData(dir, query);
 	color(8);
@@ -544,16 +551,16 @@ void send_message() {
 	std::string s_username;
 	std::string s_message;
 	std::string s_user_uid;
-	std::cout << "\nusername\n> "; color(14); std::cin >> s_username; color(8); std::cout << "\nmessage\n> "; color(14); std::cin >> s_message; color(8);
+	std::cout << "\nusername\n> "; color(14); std::cin >> s_username; color(8); std::cout << "\nmessage\n> "; color(14); std::cin >> s_message;
+	color(8);
 	if (s_message.length() <= 3) {
 		logs("message is too short, please avoid spamming", 2);
-		system("pause");
 	}
 	else {
 		std::string find_user_uid = "SELECT id FROM User WHERE username = '" + s_username + "';";
 		selectData(dir, find_user_uid); // We first need to know the users uid before we can proceed (messages table only has userID which can be integrated to id from User)
 		s_user_uid = user.data1; //user UID
-		std::string send_message = "INSERT INTO Messages (senderID, receiverID, message) VALUES (" + user.uid + "," + s_user_uid + ",'" + s_message + "');";
+		std::string send_message = "INSERT INTO Messages (senderID, sender_name, receiverID, message) VALUES (" + user.uid + ",'" + username + "'," + s_user_uid + ",'" + s_message + "');";
 		insertData(dir, send_message);
 		logs("Message sent succesfully", 1);
 		Messages();
@@ -561,13 +568,11 @@ void send_message() {
 }
 void view_messages() {
 	std::string u_sender;
-	std::string query = "SELECT senderID, message FROM Messages WHERE receiverID = " + user.uid + ";"; //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
+	std::string query = "SELECT sender_name FROM Messages WHERE receiverID = " + user.uid + ";";  //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
 	color(14);
 	selectData(dir, query);
-	color(8); std::cout << "\nFROM:";
-	color(14);
-	u_sender = user.data;
-	query = "SELECT username FROM User WHERE id = " + u_sender + ";"; // now we can search the username by the UID
+	color(8); std::cout << "\nFROM:\n"; color(14);
+    query = "SELECT message FROM Messages WHERE receiverID = " + user.uid + ";";
 	selectData(dir, query);
 	color(8);
 	Messages();
@@ -790,8 +795,6 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	}
 
 }
-
-
 int main(const char* s) {
 	//view_marketplace();
 
@@ -894,6 +897,7 @@ static int createTable(const char* s) {
 				//	logs("Inventory table was created successfully!", 1);
 					query = "CREATE TABLE IF NOT EXISTS Messages ("
 						"senderID INTEGER,"
+						"sender_name TEXT,"
 						"receiverID INTEGER,"
 						"message TEXT);";
 
@@ -922,28 +926,13 @@ static int createTable(const char* s) {
 }
 static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
-	std::ofstream data;
-	for (int i = 0; i < argc; i++) {
-
-		data.open("c://data.txt");
-		if (data.is_open()) {
-			data << " " << argv[i];
-				//i++;
-		
-		}
-
-		std::cout << "\n|" << azColName[i] << " -> " << argv[i] << "|";
-
-
+	int i;
+	for (i = 0; i < argc; i++) {
+		printf(" %s\n", argv[i] ? argv[i] : "NULL");
 		user.data = argv[0];
 		user.data1 = argv[i];
-		user.col_name = azColName[i];
-
-
 	}
-	
-	//std::cout << std::endl;
-	data.close();
+	printf("\n");
 	return 0;
 }
 void SettingsTab() {
