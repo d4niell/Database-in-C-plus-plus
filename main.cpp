@@ -17,7 +17,7 @@ bool database_created = false;
 const char* dir = "c://Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
-static std::string version = "1.0.7";
+static std::string version = "1.0.8-beta.3";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -318,7 +318,7 @@ void ATM() {
 void additem_marketplace() {
 	std::string item_name;
 	std::string item_price;
-	userInput(1, 6, "select item", "a", "b", "c");
+	userInput(1, 6, "select item", "back", "c", "d");
 	switch (user.add_marketplace_item) {
 	case 1:
 		color(8); 
@@ -336,6 +336,8 @@ void additem_marketplace() {
 			}	
 		}
 		break;
+	case 2:
+		Marketplace();
 	}
 
 }
