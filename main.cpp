@@ -17,11 +17,12 @@ bool database_created = false;
 const char* dir = "c://Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
-static std::string version = "1.0.8";
+static std::string version = "1.0.9-beta.1";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
 static int createTable(const char* s);
+void Messages();
 void SettingsTab();
 std::vector<std::string> lines;
 void fetchcashAmount();
@@ -73,13 +74,17 @@ public:
 	int edit_marketplace_item = 0;
 	std::string data;
 	std::string data1;
+	int Messages = 0;
 	std::string data2;
 	std::string data3;
+	int inventory_input = 0;
 	std::string uid;
 	int money;
 	bool Save_Credentials = false;
 	std::string user_un;
 	std::string user_pw;
+	std::string col_name;
+
 
 }user;
 struct {
@@ -168,8 +173,6 @@ bool Register() {
 	else {
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + username + "','" + password + "');";
 		insertData(dir, save);
-		save = "INSERT INTO Inventory (item, amount) VALUES ('dirt', 1)";
-		insertData(dir, save);	
 		logs("registration succesfull!", 1);
 		main(dir);
 		return 0;
@@ -254,7 +257,7 @@ void add_ATM_purchase_history(std::string purchase_item, int purchase_price) {
 		perror("\n");
 	}
 	else {
-		myfile << "date:" << dt << "type: [purchase] name: " << purchase_item << " price: " << purchase_price << "\n";
+		myfile << "[purchased] date:" << dt << "type: [purchase] name: " << purchase_item << " price: " << purchase_price << "\n";
 	}
 	myfile.close();
 }
@@ -354,7 +357,7 @@ void confirm_market_purchase() {
 		}
 		else
 		{
-				std::string add_inv = "UPDATE Inventory SET item = '" + market.item_name + "' WHERE userID = " + user.uid + ";";
+				std::string add_inv = "INSERT INTO Inventory (userID, item, amount) VALUES (" + user.uid + ", '" + market.item_name + "', 1)";
 				insertData(dir, add_inv);
 					std::ostringstream str1;
 					int pay_amount = user.cash - market.item_price;
@@ -367,6 +370,7 @@ void confirm_market_purchase() {
 					std::cout << "You have $"; color(14); std::cout << pay_amount; color(8); std::cout << " left.";
 					add_ATM_purchase_history(market.item_name, market.item_price);
 					std::string delete_item = "DELETE FROM Marketplace WHERE itemName = '" + market.item_name + "';";
+
 					selectData(dir, delete_item);
 					Sleep(500);
 					userPanel();
@@ -473,8 +477,7 @@ void view_marketplace() {
 	color(8);
 	std::string query = "SELECT itemName, price FROM Marketplace";
 	selectData(dir, query);
-		logs("Welcome to the marketplace", 1);
-	std::cout << "you currently have: $"; color(14); std::cout << user.cash; color(8);
+	std::cout << "\nyou currently have: $"; color(14); std::cout << user.cash; color(8);
 	userInput(0, 7, "Buy Item", "Edit Item", "Back", "Exit");
 	switch (user.view_marketplace_edit) {
 	case 1:
@@ -493,8 +496,6 @@ void view_marketplace() {
 	
 }
 void Marketplace() {
-
-	logs("Here you can buy/sell items. This feature is still in beta!", 1);
 	userInput(0, 4, "View Marketplace", "Add Item", "Back", "Exit");
 	switch (user.marketplaceAns) {
 	case 1:
@@ -513,8 +514,25 @@ void Marketplace() {
 
 }
 void Inventory() {
-	std::string query = "SELECT * FROM Inventory WHERE userID = " + user.uid+";";
+	std::string query = "SELECT item, amount FROM Inventory WHERE userID = " + user.uid+";";
 	selectData(dir, query);
+	userInput(0, 10, "View Item", "Marketplace", "ATM", "Back");
+	switch (user.inventory_input) {
+	case 1:
+		//TODO
+		break;
+	case 2:
+		Marketplace();
+		break;
+	case 3:
+		ATM();
+		break;
+	case 4:
+		userPanel();
+		break;
+	
+	
+	}
 }
 void fetchUID() {
 	std::string query = "SELECT id FROM User WHERE username = '" +username+ "';";
@@ -526,15 +544,63 @@ void fetchCASH() {
 	selectData(dir, query);
 		user.cash = stoi(user.data1);
 }
+void send_message() {
+	std::string s_username;
+	std::string s_message;
+	std::string s_user_uid;
+	std::cout << "\nusername\n> "; color(14); std::cin >> s_username; color(8); std::cout << "\nmessage\n> "; color(14); std::cin >> s_message; color(8);
+	if (s_message.length() <= 3) {
+		logs("message is too short, please avoid spamming", 2);
+		system("pause");
+	}
+	else {
+		std::string find_user_uid = "SELECT id FROM User WHERE username = '" + s_username + "';";
+		selectData(dir, find_user_uid); // We first need to know the users uid before we can proceed (messages table only has userID which can be integrated to id from User)
+		s_user_uid = user.data1; //user UID
+		std::string send_message = "INSERT INTO Messages (senderID, receiverID, message) VALUES (" + user.uid + "," + s_user_uid + ",'" + s_message + "');";
+		insertData(dir, send_message);
+		logs("Message sent succesfully", 1);
+		Messages();
+	}
+}
+void view_messages() {
+	std::string u_sender;
+	std::string query = "SELECT senderID, message FROM Messages WHERE receiverID = " + user.uid + ";";
+	selectData(dir, query);
+	std::cout << "\nFROM:";
+	u_sender = user.data;
+	query = "SELECT username FROM User WHERE id = " + u_sender + ";";
+	selectData(dir, query);
+	Messages();
+
+}
+void Messages() {
+	userInput(0, 11, "View Messages", "Send Message", "Back", "");
+	switch (user.Messages) {
+	case 1:
+		view_messages();
+		break;
+	case 2:
+		send_message();
+		break;
+	case 3:
+		userPanel();
+		break;
+
+	
+	}
+
+}
 void userPanel() {
 	time_t now = time(0);
 	char* dt = ctime(&now);
 	fetchUID();
 	fetchCASH();
+	//fetchMessages();
 	system("cls");
 	color(8); std::cout << "> "; color(11); std::cout << dt;
-	color(8); std::cout << "> Username: "; color(14); std::cout << username; color(8); std::cout << "| UID: "; color(14); std::cout << user.uid; color(8); std::cout << "| Cash: "; color(14); std::cout << user.cash; color(8);
-	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Log out");
+	color(8); std::cout << "> {"; color(7);std::cout << "USERNAME: "; color(14); std::cout << username; color(7); std::cout << " | UID : "; color(14); std::cout << user.uid; color(7); std::cout << " | CASH : "; color(14); std::cout << user.cash; color(8); std::cout << "}";
+	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Messages");
 	system("title dbincpp Userpanel");	
 	switch (user.userpanelAns) {
 	case 1:
@@ -549,9 +615,8 @@ void userPanel() {
 		Inventory();
 		break;
 	case 4:
-		main(dir);
+		Messages();
 		break;
-
 	}
 
 }
@@ -598,7 +663,7 @@ bool Login() {
 		Sleep(1000);
 		main(dir);
 	}
-	std::cout << "\n		Username:"; color(14); std::cin >> username; color(8); std::cout << "\n\n		Password:"; color(14); std::cin >> password;
+	std::cout << "\nUsername\n> "; color(14); std::cin >> username; color(8); std::cout << "\n\nPassword\n> "; color(14); std::cin >> password;
 	std::string sql = "SELECT username, password FROM User WHERE username = '" + username + "' AND password = '" + password + "';";
 	selectData(dir, sql);
 		if (username.length() > 3 && password.length() > 3) {
@@ -662,7 +727,8 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	std::cout << "\n|	[2]"; color(7); std::cout << o2; color(8);
 	std::cout << "\n|	[3]"; color(7); std::cout << o3; color(8);
 	std::cout << "\n|	[4]"; color(7); std::cout << o4; color(8);
-	color(14); std::cout << "\n		> "; std::cin >> ans;
+	color(14); std::cout << "\n		> "; std::cin >> ans; color(8);
+	std::cout << "------------------------------------------------\n";
 	switch (ans) {
 	case 1:
 		if (o1 == "")
@@ -717,6 +783,11 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 	case 9:
 		user.edit_marketplace_item = ans;//for edit marketplace function
 		break;
+	case 10:
+		user.inventory_input = ans;
+		break;
+	case 11:
+		user.Messages = ans;
 	}
 
 }
@@ -724,7 +795,6 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 
 int main(const char* s) {
 	//view_marketplace();
-	system("title dbincpp (top codenz $$$$$)");
 
 	if (isChecked == false) {
 		Checkforsettings();
@@ -739,6 +809,8 @@ int main(const char* s) {
 	createTable(dir);
 
 start:
+	system("title Database In C++");
+
 	userInput(1, 1, "Register.", "Login.", "Settings.", "Exit.");
 	switch (user.mainAns) {
 	case 1:
@@ -773,7 +845,7 @@ static int createDB(const char* s) {
 }
 
 static int createTable(const char* s) {
-
+	system("title initializing databases");
 	int exception;
 	sqlite3* db;
 	std::string query = "CREATE TABLE IF NOT EXISTS User ("
@@ -808,7 +880,7 @@ static int createTable(const char* s) {
 			else {
 				//logs("Marketplace Database table Created Successfully", 1);
 				query = "CREATE TABLE IF NOT EXISTS Inventory ("
-					"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+					"userID INTEGER,"
 					"item TEXT,"
 					"amount INTEGER);";
 
@@ -821,8 +893,25 @@ static int createTable(const char* s) {
 				}
 				else {
 				//	logs("Inventory table was created successfully!", 1);
+					query = "CREATE TABLE IF NOT EXISTS Messages ("
+						"senderID INTEGER,"
+						"receiverID INTEGER,"
+						"message TEXT);";
 
+					exit = sqlite3_open(s, &db);
+					exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 
+					if (exit != SQLITE_OK) {
+						std::cout << "\nError While Creating Messages Table:" << Error;
+						//	logs("error on  table", 2);
+						sqlite3_free(Error);
+						system("pause");
+					}
+					else {
+						Sleep(200);
+						system("title databases initialized!");
+						Sleep(200);
+					}
 
 				}
 			}
@@ -844,11 +933,12 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 		
 		}
 
-		std::cout << "\n|" << azColName[i] << " -> " << argv[i] << "|" << std::endl;
+		std::cout << "\n|" << azColName[i] << " -> " << argv[i] << "|";
 
 
 		user.data = argv[0];
 		user.data1 = argv[i];
+		user.col_name = azColName[i];
 
 
 	}
