@@ -17,7 +17,7 @@ bool database_created = false;
 const char* dir = "c://Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
-static std::string version = "1.0.8-beta.3";
+static std::string version = "1.0.8";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -25,9 +25,11 @@ static int createTable(const char* s);
 void SettingsTab();
 std::vector<std::string> lines;
 void fetchcashAmount();
-void Checkforsettings();
+void Checkforsettings(); 
+void delete_marketplace_item();
 void ATM();
 void Marketplace();
+void view_marketplace();
 void userPanel();
 std::string line;
 void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4);
@@ -224,7 +226,7 @@ void Addmoney(std::string username, std::string amount) {
 }
 void view_ATM_purchase_history() {
 	std::fstream myfile;
-	myfile.open("c://dbincpp_atm.txt");
+	myfile.open("c://" +username+ "_dbincpp_atm.txt");
 	if (!myfile.is_open()) {
 		logs("Error Occured", 3);
 		perror("\n");
@@ -246,7 +248,7 @@ void add_ATM_purchase_history(std::string purchase_item, int purchase_price) {
 	time_t now = time(0);
 	char* dt = ctime(&now);
 	std::ofstream myfile;
-	myfile.open("c://dbincpp_atm.txt",std::ios::app);
+	myfile.open("c://" + username + "_dbincpp_atm.txt",std::ios::app);
 	if (!myfile.is_open()) {
 		logs("Error Occured", 3);
 		perror("\n");
@@ -329,7 +331,7 @@ void additem_marketplace() {
 			std::cin >> item_price; color(8);
 			if (item_price.length() > 0) {
 				logs("adding item.", 1);
-				std::string query = "INSERT INTO Marketplace (itemName, price) VALUES ('" + item_name + "'," + item_price + ");";
+				std::string query = "INSERT INTO Marketplace (userID,itemName, price) VALUES (" + user.uid + ",'" + item_name + "', " + item_price + "); ";
 				insertData(dir, query);
 				//std::cout << query;
 				Marketplace();
@@ -348,7 +350,7 @@ void confirm_market_purchase() {
 		if (user.cash < market.item_price) //compares the market place item's desired price if the user has enough money
 		{
 			logs("you have insufficient funds", 2);
-			system("pause");
+			Marketplace();
 		}
 		else
 		{
@@ -364,6 +366,8 @@ void confirm_market_purchase() {
 					logs("Thank you for purchasing", 1);
 					std::cout << "You have $"; color(14); std::cout << pay_amount; color(8); std::cout << " left.";
 					add_ATM_purchase_history(market.item_name, market.item_price);
+					std::string delete_item = "DELETE FROM Marketplace WHERE itemName = '" + market.item_name + "';";
+					selectData(dir, delete_item);
 					Sleep(500);
 					userPanel();
 		}
@@ -396,36 +400,94 @@ void buy_marketplace_item() {
 	}
 
 }
-void edit_marketplace_item() {
-	userInput(1, 9, "", "", "", "");
+void edit_marketplace_price() {
+back:
+	std::ostringstream str1;
+	std::string item_name;
+	int item_price;
+	std::string query = "SELECT itemName, price FROM Marketplace WHERE userID = " + user.uid + ";";
+	color(8); std::cout << "Your item(s) you have listed:"; color(14);
+	selectData(dir, query);
+	color(8); std::cout << "\n Select item to edit\nname:"; color(14); std::cin >> item_name;
+	color(8); std::cout << "\nnew price\n> "; color(14); std::cin >> item_price; color(8);
+	if (item_price <= 0) {
+		logs("you can't list free items", 2);
+		goto back;
+	}
+	else {
+		str1 << item_price;
+		std::string new_price = str1.str();
+		query = "UPDATE Marketplace SET price = " + new_price + " WHERE userID = " + user.uid + " AND itemName ='" + item_name + "';";
+		insertData(dir, query);
+		logs("price updated succesfully", 1);
+		Marketplace();
+	}
+}
+void edit_marketplace() {
+	userInput(1, 9, "Edit price", "Delete Item", "Back", "Exit");
+	switch (user.edit_marketplace_item) {
+	case 1:
+		edit_marketplace_price();
+		break;
+	case 2:
+		delete_marketplace_item();
+		break;
+	case 3:
+		Marketplace();
+		break;
+	case 4:
+		main(dir);
+		break;
 
+	
+	
+	}
 }
 void delete_marketplace_item() {
-
+	std::string item_name;
+	std::string query = "SELECT itemName, price FROM Marketplace WHERE userID = " + user.uid + ";";
+	color(8); std::cout << "Your item(s) you have listed:"; color(14);
+	selectData(dir, query);
+	color(8); std::cout << "\n Select item to delete\nname:"; color(14); std::cin >> item_name;
+	if (item_name.length() >= 1) {
+		color(8); std::cout << "Selected item is: "; color(14); std::cout << market.item_name; color(8); std::cout << "\ncost: $"; color(14); std::cout << market.item_price << "\n";
+		color(8); std::cout << "Do you confirm this deletion? type: \""; color(14); std::cout << "confirm"; color(8); std::cout << "\". To go back, type: \""; color(14); std::cout << "back"; color(8); std::cout << "\"\n\n:";
+		std::string ans;
+		color(14);
+		std::cin >> ans;
+		if (ans == "confirm") {
+			color(8);
+			query = "DELETE FROM Marketplace WHERE userID =" + user.uid + " AND itemName = '" + item_name + "';";
+			selectData(dir, query);
+			logs("Item has been deleted.", 2);
+			view_marketplace();
+		}
+		if (ans == "back") {
+			color(8);
+			view_marketplace();
+		}
+	}
 }
 void view_marketplace() {
 	system("cls");
 	color(8);
-	sqlite3* DB;
-	char* messageError;
-	int exit = sqlite3_open(dir, &DB);
 	std::string query = "SELECT itemName, price FROM Marketplace";
 	selectData(dir, query);
 		logs("Welcome to the marketplace", 1);
 	std::cout << "you currently have: $"; color(14); std::cout << user.cash; color(8);
-	userInput(0, 7, "Buy Item", "Edit Item", "Delete Item", "Back");
+	userInput(0, 7, "Buy Item", "Edit Item", "Back", "Exit");
 	switch (user.view_marketplace_edit) {
 	case 1:
 		buy_marketplace_item();
 		break;
 	case 2:
-		edit_marketplace_item();
+		edit_marketplace();
 		break;
 	case 3:
-		delete_marketplace_item();
+		Marketplace();
 		break;
 	case 4:
-		userPanel();
+		main(dir);
 		break;
 	}
 	
@@ -470,8 +532,8 @@ void userPanel() {
 	fetchUID();
 	fetchCASH();
 	system("cls");
-	std::cout << "> " << dt;
-	color(8); std::cout << "\nUsername: "; color(14); std::cout << username; color(8); std::cout << "| UID: "; color(14); std::cout << user.uid; color(8); std::cout << "| Cash: "; color(14); std::cout << user.cash; color(8);
+	color(8); std::cout << "> "; color(11); std::cout << dt;
+	color(8); std::cout << "> Username: "; color(14); std::cout << username; color(8); std::cout << "| UID: "; color(14); std::cout << user.uid; color(8); std::cout << "| Cash: "; color(14); std::cout << user.cash; color(8);
 	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Log out");
 	system("title dbincpp Userpanel");	
 	switch (user.userpanelAns) {
@@ -732,7 +794,7 @@ static int createTable(const char* s) {
 	else {
 		//logs("User table Created Successfully", 1);	
 			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
-				"userID INTEGER PRIMARY KEY AUTOINCREMENT,"
+				"userID INTEGER,"
 				"itemName TEXT,"
 				"price INTEGER);";
 
