@@ -15,7 +15,7 @@ bool isLoginned = false;
 bool findUserInventory(int _id);
 int isChecked = false;
 bool database_created = false;
-const char* dir = "c://Database.db";
+const char* dir =  "C:\\Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
 static std::string version = "1.0.9-beta.1";
@@ -39,6 +39,7 @@ int main(const char* s);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 static int insertData(const char* s, std::string sql);
+static int fetch_messages(const char* s, std::string sql);
 void SaveData_local(std::string message) {
 	std::ofstream SaveData_local;
 	SaveData_local.open("C://logs.txt", std::ios::app);
@@ -568,12 +569,9 @@ void send_message() {
 }
 void view_messages() {
 	std::string u_sender;
-	std::string query = "SELECT sender_name FROM Messages WHERE receiverID = " + user.uid + ";";  //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
+	std::string query = "SELECT sender_name, message FROM Messages WHERE receiverID = " + user.uid + ";";  //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
 	color(14);
-	selectData(dir, query);
-	color(8); std::cout << "\nFROM:\n"; color(14);
-    query = "SELECT message FROM Messages WHERE receiverID = " + user.uid + ";";
-	selectData(dir, query);
+	fetch_messages(dir, query);
 	color(8);
 	Messages();
 
@@ -896,10 +894,12 @@ static int createTable(const char* s) {
 				else {
 				//	logs("Inventory table was created successfully!", 1);
 					query = "CREATE TABLE IF NOT EXISTS Messages ("
+						"MessageID	INTEGER UNIQUE,"
 						"senderID INTEGER,"
 						"sender_name TEXT,"
 						"receiverID INTEGER,"
-						"message TEXT);";
+						"message TEXT,"
+						"PRIMARY KEY(MessageID AUTOINCREMENT));";
 
 					exit = sqlite3_open(s, &db);
 					exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
@@ -928,13 +928,45 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
 	int i;
 	for (i = 0; i < argc; i++) {
-		printf(" %s\n", argv[i] ? argv[i] : "NULL");
+		// printf(" %s\n", argv[i] ? argv[i] : "NULL");
 		user.data = argv[0];
 		user.data1 = argv[i];
 	}
 	printf("\n");
 	return 0;
 }
+static int callback_messages(void* NotUsed, int argc, char** argv, char** azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (i == 0)
+		{
+			printf("FROM: %s ", argv[0]);
+		}
+		if (i == 1)
+		{
+			printf("MESSAGE: %s", argv[1]);
+		}
+		
+	}
+	printf("\n");
+	return 0;
+}
+static int fetch_messages(const char* s, std::string sql)
+{
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(s, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	exit = sqlite3_exec(DB, sql.c_str(), callback_messages, 0, &messageError);
+
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+		sqlite3_free(messageError);
+	}
+	else
+		return(0);
+}
+
 void SettingsTab() {
 	userInput(1, 8, "Advanced Mode (W.I.P)", "Clear Logs", "Save Credentials", "Back");
 	switch (user.Settings_tab) {
