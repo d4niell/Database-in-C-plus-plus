@@ -17,8 +17,9 @@ int isChecked = false;
 bool database_created = false;
 const char* dir = "C:\\Database.db";
 static bool isBeta = true;
+static int fetch_inventory(const char* s, std::string sql);
 bool advanced_mode = false;
-static std::string version = "1.1.2-beta.1";
+static std::string version = "1.1.2-beta.2";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -515,15 +516,10 @@ void Marketplace() {
 	}
 }
 void Inventory() {
-	std::cout << "item name:";
-	std::string query = "SELECT item FROM Inventory WHERE userID = " + user.uid + ";";
+	//std::cout << "item name:";
+	std::string query = "SELECT item, amount FROM Inventory WHERE userID = " + user.uid + ";";
 	color(14);
-	selectData(dir, query);
-	color(8);
-	std::cout << "quantity:";
-	query = "SELECT amount FROM Inventory WHERE userID = " + user.uid + ";";
-	color(14);
-	selectData(dir, query);
+	fetch_inventory(dir, query);
 	color(8);
 	userInput(0, 10, "Buy Item(s)", "List Item(s)", "View Purchase History", "Back");
 	switch (user.inventory_input) {
@@ -987,6 +983,37 @@ static int fetch_messages(const char* s, std::string sql)
 	int exit = sqlite3_open(s, &DB);
 	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
 	exit = sqlite3_exec(DB, sql.c_str(), callback_messages, 0, &messageError);
+
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+		sqlite3_free(messageError);
+	}
+	else
+		return(0);
+}
+static int callback_inventory(void* NotUsed, int argc, char** argv, char** azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (i == 0)
+		{
+			printf("item: %s ", argv[0]);
+		}
+		if (i == 1)
+		{
+			printf("quantity: %s", argv[1]);
+		}
+
+	}
+	printf("\n");
+	return 0;
+}
+static int fetch_inventory(const char* s, std::string sql)
+{
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(s, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	exit = sqlite3_exec(DB, sql.c_str(), callback_inventory, 0, &messageError);
 
 	if (exit != SQLITE_OK) {
 		std::cerr << "Error in selectData function." << std::endl;
