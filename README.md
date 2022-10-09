@@ -15,3 +15,6 @@ Database in c++, short project for my school. To maintain my c++ programming kno
 * sending money to other person
 * marketplace 
 * sending messages to other person
+* ability to view purchase history
+* you can edit items in marketplace tab (if you own them) e.g change price / delete
+* you can purchase items from marketplace 
