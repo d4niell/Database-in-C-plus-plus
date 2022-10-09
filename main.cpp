@@ -19,7 +19,7 @@ const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 static int fetch_inventory(const char* s, std::string sql);
 bool advanced_mode = false;
-static std::string version = "1.1.2-beta.2";
+static std::string version = "1.1.3";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -412,8 +412,8 @@ back:
 	std::string item_name;
 	int item_price;
 	std::string query = "SELECT itemName, price FROM Marketplace WHERE userID = " + user.uid + ";";
-	color(8); std::cout << "Your item(s) you have listed:"; color(14);
-	selectData(dir, query);
+	color(8); std::cout << "Your item(s) you have listed:\n"; color(14);
+	fetch_items(dir, query);
 	color(8); std::cout << "\n Select item to edit\nname:"; color(14); std::cin >> item_name;
 	color(8); std::cout << "\nnew price\n> "; color(14); std::cin >> item_price; color(8);
 	if (item_price <= 0) {
@@ -449,8 +449,8 @@ void edit_marketplace() {
 void delete_marketplace_item() {
 	std::string item_name;
 	std::string query = "SELECT itemName, price FROM Marketplace WHERE userID = " + user.uid + ";";
-	color(8); std::cout << "Your item(s) you have listed:"; color(14);
-	selectData(dir, query);
+	color(8); std::cout << "Your item(s) you have listed:\n"; color(14);
+	fetch_items(dir, query);
 	color(8); std::cout << "\n Select item to delete\nname:"; color(14); std::cin >> item_name;
 	if (item_name.length() >= 1) {
 		color(8); std::cout << "Selected item is: "; color(14); std::cout << market.item_name; color(8); std::cout << "\ncost: $"; color(14); std::cout << market.item_price << "\n";
