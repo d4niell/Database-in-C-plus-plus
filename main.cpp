@@ -15,7 +15,7 @@ bool isLoginned = false;
 bool findUserInventory(int _id);
 int isChecked = false;
 bool database_created = false;
-const char* dir = "c://Database.db";
+const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
 static std::string version = "1.0.9-beta.1";
@@ -23,11 +23,12 @@ bool logs(std::string message, int type);
 std::string username;
 std::string password;
 static int createTable(const char* s);
+static int fetch_items(const char* s, std::string sql);
 void Messages();
 void SettingsTab();
 std::vector<std::string> lines;
 void fetchcashAmount();
-void Checkforsettings(); 
+void Checkforsettings();
 void delete_marketplace_item();
 void ATM();
 void Marketplace();
@@ -39,6 +40,7 @@ int main(const char* s);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 static int insertData(const char* s, std::string sql);
+static int fetch_messages(const char* s, std::string sql);
 void SaveData_local(std::string message) {
 	std::ofstream SaveData_local;
 	SaveData_local.open("C://logs.txt", std::ios::app);
@@ -135,7 +137,7 @@ bool logs(std::string message, int type) { //prints out logs
 	case 1:
 		color(2);
 		std::cout << "[*] > " << message << "\n";
-		
+
 		color(8);
 		break;
 	case 2:
@@ -194,7 +196,7 @@ static int insertData(const char* s, std::string sql)
 		sqlite3_free(messageError);
 	}
 	else
-	return 0;
+		return 0;
 }
 static int selectData(const char* s, std::string sql)
 {
@@ -209,7 +211,7 @@ static int selectData(const char* s, std::string sql)
 		sqlite3_free(messageError);
 	}
 	else
-	return 0;
+		return 0;
 }
 void highlighter(std::string message, std::string highlightedMessage) { //useless for now
 	std::cout << message; color(14); std::cout << highlightedMessage << "\n\n"; color(8);
@@ -219,12 +221,12 @@ void Addmoney(std::string username, std::string amount) {
 	std::string sql = "UPDATE User SET cash =" + amount + " WHERE username = '" + username + "';";
 	insertData(dir, sql);
 	int i_amount = std::stoi(amount, &sz); //converts amount to int so that we can count it
-		logs("Money was added successfully!", 1);
-		userPanel();	
+	logs("Money was added successfully!", 1);
+	userPanel();
 }
 void view_ATM_purchase_history() {
 	std::fstream myfile;
-	myfile.open("c://" +username+ "_dbincpp_atm.txt");
+	myfile.open("c://" + username + "_dbincpp_atm.txt");
 	if (!myfile.is_open()) {
 		logs("Error Occured", 3);
 		perror("\n");
@@ -233,7 +235,7 @@ void view_ATM_purchase_history() {
 		logs("Purchase History", 1);
 		std::string line;
 		while (getline(myfile, line)) { //getline loop 
-			
+
 			std::cout << "------------------->"; color(14); std::cout << line << std::endl; color(8);
 			std::cout << "\n\n";
 		}
@@ -246,7 +248,7 @@ void add_ATM_purchase_history(std::string purchase_item, int purchase_price) {
 	time_t now = time(0);
 	char* dt = ctime(&now);
 	std::ofstream myfile;
-	myfile.open("c://" + username + "_dbincpp_atm.txt",std::ios::app);
+	myfile.open("c://" + username + "_dbincpp_atm.txt", std::ios::app);
 	if (!myfile.is_open()) {
 		logs("Error Occured", 3);
 		perror("\n");
@@ -275,9 +277,9 @@ void sendMoney() {
 		std::string i_pay_amount = str1.str(); // this function converts new_user_amount (which we stored into str1) into string so we can use it on querys
 		std::string local_amount = str2.str(); // /--/
 		std::cout << i_pay_amount << " " << u_username;
-		 query_1 = "UPDATE User SET cash = " + local_amount + " WHERE username = '" + username + "';";
+		query_1 = "UPDATE User SET cash = " + local_amount + " WHERE username = '" + username + "';";
 		insertData(dir, query_1);
-		 query_1 = "UPDATE User SET cash = " + i_pay_amount + " WHERE username = '" + u_username + "';";
+		query_1 = "UPDATE User SET cash = " + i_pay_amount + " WHERE username = '" + u_username + "';";
 		insertData(dir, query_1);
 		logs("You're a nice person", 1);
 		system("pause");
@@ -318,10 +320,10 @@ void additem_marketplace() {
 	userInput(1, 6, "Select Item", "View Marketplace", "ATM", "Back");
 	switch (user.add_marketplace_item) {
 	case 1:
-		color(8); 
+		color(8);
 		std::cout << "Select a name:"; color(14); std::cin >> item_name;
 		if (item_name.length() >= 1) {
-			color(8); std::cout << "\nSelect a price for:"; color(14); 
+			color(8); std::cout << "\nSelect a price for:"; color(14);
 			std::cout << item_name << "\n> ";
 			std::cin >> item_price; color(8);
 			if (item_price.length() > 0) {
@@ -330,7 +332,7 @@ void additem_marketplace() {
 				insertData(dir, query);
 				//std::cout << query;
 				Marketplace();
-			}	
+			}
 		}
 		break;
 	case 2:
@@ -347,33 +349,33 @@ void additem_marketplace() {
 }
 void confirm_market_purchase() {
 	int desired_price;
-	int user_funds;	
+	int user_funds;
 	//color(14); std::cout << user.cash; color(8); std::cout << "<<"; color(14);std::cout << market.item_price;
-		if (user.cash < market.item_price) //compares the market place item's desired price if the user has enough money
-		{
-			logs("you have insufficient funds", 2);
-			Marketplace();
-		}
-		else
-		{
-				std::string add_inv = "INSERT INTO Inventory (userID, item, amount) VALUES (" + user.uid + ", '" + market.item_name + "', 1)";
-				insertData(dir, add_inv);
-					std::ostringstream str1;
-					int pay_amount = user.cash - market.item_price;
-					str1 << pay_amount; //stores pay_amount into str1
-					std::string i_pay_amount = str1.str(); //converts pay_amount which is stored in str1 into i_pay_amount (string)
-					std::string query = "UPDATE User SET cash = " + i_pay_amount + " WHERE id =" + user.uid + ";";
-					insertData(dir, query);
-					std::cout << "\n";
-					logs("Thank you for purchasing", 1);
-					std::cout << "You have $"; color(14); std::cout << pay_amount; color(8); std::cout << " left.";
-					add_ATM_purchase_history(market.item_name, market.item_price);
-					std::string delete_item = "DELETE FROM Marketplace WHERE itemName = '" + market.item_name + "';";
+	if (user.cash < market.item_price) //compares the market place item's desired price if the user has enough money
+	{
+		logs("you have insufficient funds", 2);
+		Marketplace();
+	}
+	else
+	{
+		std::string add_inv = "INSERT INTO Inventory (userID, item, amount) VALUES (" + user.uid + ", '" + market.item_name + "', 1)";
+		insertData(dir, add_inv);
+		std::ostringstream str1;
+		int pay_amount = user.cash - market.item_price;
+		str1 << pay_amount; //stores pay_amount into str1
+		std::string i_pay_amount = str1.str(); //converts pay_amount which is stored in str1 into i_pay_amount (string)
+		std::string query = "UPDATE User SET cash = " + i_pay_amount + " WHERE id =" + user.uid + ";";
+		insertData(dir, query);
+		std::cout << "\n";
+		logs("Thank you for purchasing", 1);
+		std::cout << "You have $"; color(14); std::cout << pay_amount; color(8); std::cout << " left.";
+		add_ATM_purchase_history(market.item_name, market.item_price);
+		std::string delete_item = "DELETE FROM Marketplace WHERE itemName = '" + market.item_name + "';";
 
-					selectData(dir, delete_item);
-					Sleep(500);
-					userPanel();
-		}
+		selectData(dir, delete_item);
+		Sleep(500);
+		userPanel();
+	}
 
 }
 void buy_marketplace_item() {
@@ -384,21 +386,21 @@ void buy_marketplace_item() {
 		std::string query = "SELECT itemName, price from Marketplace WHERE itemName ='" + name + "';";
 		selectData(dir, query);
 		//	system("pause");
-			market.item_name = user.data;
-			market.item_price = stoi(user.data1);
-			color(8); std::cout << "\nSelected item is: "; color(14); std::cout << market.item_name; color(8); std::cout<< "\ncost: $"; color(14); std::cout << market.item_price << "\n";
-			color(8); std::cout << "Do you confirm this purchase? type: \""; color(14); std::cout << "confirm"; color(8); std::cout << "\". To go back, type: \""; color(14); std::cout << "back"; color(8);std::cout << "\"\n\n:";
-			std::string ans;
-			color(14);
-			std::cin >> ans;
-			if (ans == "confirm") {
-				color(8);
-				confirm_market_purchase();
-				}
-			if (ans == "back") {
-				color(8);
-				Marketplace();
-			}
+		market.item_name = user.data;
+		market.item_price = stoi(user.data1);
+		color(8); std::cout << "\nSelected item is: "; color(14); std::cout << market.item_name; color(8); std::cout << "\ncost: $"; color(14); std::cout << market.item_price << "\n";
+		color(8); std::cout << "Do you confirm this purchase? type: \""; color(14); std::cout << "confirm"; color(8); std::cout << "\". To go back, type: \""; color(14); std::cout << "back"; color(8); std::cout << "\"\n\n:";
+		std::string ans;
+		color(14);
+		std::cin >> ans;
+		if (ans == "confirm") {
+			color(8);
+			confirm_market_purchase();
+		}
+		if (ans == "back") {
+			color(8);
+			Marketplace();
+		}
 
 	}
 
@@ -468,12 +470,14 @@ void delete_marketplace_item() {
 		}
 	}
 }
+
 void view_marketplace() {
+	sqlite3* db;
 	system("cls");
 	color(8);
 	std::string query = "SELECT itemName, price FROM Marketplace";
 	color(14);
-	selectData(dir, query);
+	fetch_items(dir, query);
 	color(8);
 	std::cout << "\nyou currently have: $"; color(14); std::cout << user.cash; color(8);
 	userInput(0, 7, "Buy Item", "Edit Item", "Get Money", "Back");
@@ -500,7 +504,7 @@ void Marketplace() {
 		view_marketplace();
 		break;
 	case 2:
-			additem_marketplace();
+		additem_marketplace();
 		break;
 	case 3:
 		userPanel();
@@ -512,7 +516,7 @@ void Marketplace() {
 }
 void Inventory() {
 	std::cout << "item name:";
-	std::string query = "SELECT item FROM Inventory WHERE userID = " + user.uid+";";
+	std::string query = "SELECT item FROM Inventory WHERE userID = " + user.uid + ";";
 	color(14);
 	selectData(dir, query);
 	color(8);
@@ -538,14 +542,14 @@ void Inventory() {
 	}
 }
 void fetchUID() { //gets the user UID for info panel and saves the variable for future functions
-	std::string query = "SELECT id FROM User WHERE username = '" +username+ "';";
+	std::string query = "SELECT id FROM User WHERE username = '" + username + "';";
 	selectData(dir, query);
-		user.uid = user.data1;
+	user.uid = user.data1;
 }
 void fetchCASH() { // same thing but does it for cash
 	std::string query = "SELECT cash FROM User WHERE username = '" + username + "';";
 	selectData(dir, query);
-		user.cash = stoi(user.data1);
+	user.cash = stoi(user.data1);
 }
 void send_message() {
 	std::string s_username;
@@ -568,12 +572,9 @@ void send_message() {
 }
 void view_messages() {
 	std::string u_sender;
-	std::string query = "SELECT sender_name FROM Messages WHERE receiverID = " + user.uid + ";";  //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
+	std::string query = "SELECT sender_name, message FROM Messages WHERE receiverID = " + user.uid + ";";  //we're fetching messages via uid and after that's done we convert the uid to username for it to be readable :D
 	color(14);
-	selectData(dir, query);
-	color(8); std::cout << "\nFROM:\n"; color(14);
-    query = "SELECT message FROM Messages WHERE receiverID = " + user.uid + ";";
-	selectData(dir, query);
+	fetch_messages(dir, query);
 	color(8);
 	Messages();
 
@@ -591,7 +592,7 @@ void Messages() {
 		userPanel();
 		break;
 
-	
+
 	}
 
 }
@@ -603,9 +604,9 @@ void userPanel() {
 	//fetchMessages();
 	system("cls");
 	color(8); std::cout << "> "; color(11); std::cout << dt; //prints out the time from ctime
-	color(8); std::cout << "> {"; color(7);std::cout << "USERNAME: "; color(14); std::cout << username; color(7); std::cout << " | UID : "; color(14); std::cout << user.uid; color(7); std::cout << " | CASH : "; color(14); std::cout << user.cash; color(8); std::cout << "}";
+	color(8); std::cout << "> {"; color(7); std::cout << "USERNAME: "; color(14); std::cout << username; color(7); std::cout << " | UID : "; color(14); std::cout << user.uid; color(7); std::cout << " | CASH : "; color(14); std::cout << user.cash; color(8); std::cout << "}";
 	userInput(0, 2, "ATM", "Marketplace", "Inventory", "Messages");
-	system("title dbincpp Userpanel");	
+	system("title dbincpp Userpanel");
 	switch (user.userpanelAns) {
 	case 1:
 		//system("cls");
@@ -654,7 +655,7 @@ void split(std::string str, char seperator) //useless for now
 }
 bool Login() {
 	int attempts = 0;
-	start:
+start:
 	std::string m_username;
 	std::string m_password;
 	system("cls");
@@ -670,37 +671,37 @@ bool Login() {
 	std::cout << "\nUsername\n> "; color(14); std::cin >> username; color(8); std::cout << "\n\nPassword\n> "; color(14); std::cin >> password;
 	std::string sql = "SELECT username, password FROM User WHERE username = '" + username + "' AND password = '" + password + "';";
 	selectData(dir, sql);
-		if (username.length() > 3 && password.length() > 3) {
-			if (!user.data.find(username)) {
-				if (!user.data1.find(password)) {
-					if (user.Save_Credentials == true) { //for "save credentials" feature //todo
-						std::ofstream save_data;
-						save_data.open("c://credentials.txt");
-						if (save_data.is_open()) {
-							save_data << username << " " << password;
-							save_data.close();
-						}
+	if (username.length() > 3 && password.length() > 3) {
+		if (!user.data.find(username)) {
+			if (!user.data1.find(password)) {
+				if (user.Save_Credentials == true) { //for "save credentials" feature //todo
+					std::ofstream save_data;
+					save_data.open("c://credentials.txt");
+					if (save_data.is_open()) {
+						save_data << username << " " << password;
+						save_data.close();
 					}
-					userPanel();
 				}
+				userPanel();
 			}
-			else
-			{
-				logs("Invalid Username/password", 2);
-				Sleep(1000);
-				attempts++;
-				goto start;
-			}
-			
-
 		}
-		else {
-			logs("username/password length is invalid", 2);
+		else
+		{
+			logs("Invalid Username/password", 2);
 			Sleep(1000);
 			attempts++;
 			goto start;
-			Login();
 		}
+
+
+	}
+	else {
+		logs("username/password length is invalid", 2);
+		Sleep(1000);
+		attempts++;
+		goto start;
+		Login();
+	}
 
 	//system("pause");
 
@@ -724,7 +725,7 @@ void userInput(int cls, int type, std::string o1, std::string o2, std::string o3
 		title += " Beta";
 	}
 	color(9);
-	std::cout << "\n\n> "; color(7); std::cout << "dbincpp"; color(7); std::cout << " v"; color(8); std::cout << "["; color(5); std::cout << version; color(8);std::cout << "] \n";
+	std::cout << "\n\n> "; color(7); std::cout << "dbincpp"; color(7); std::cout << " v"; color(8); std::cout << "["; color(5); std::cout << version; color(8); std::cout << "] \n";
 	color(8);
 
 	std::cout << "\n|	["; color(5); std::cout << "1"; color(8); std::cout << "] "; color(7); std::cout << o1; color(8);
@@ -825,7 +826,7 @@ start:
 		SettingsTab();
 		break;
 	case 4:
-		logs("Thank you for testing me out, have fun!",1);
+		logs("Thank you for testing me out, have fun!", 1);
 		system("exit");
 		break;
 
@@ -862,62 +863,64 @@ static int createTable(const char* s) {
 	exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 	if (exit != SQLITE_OK) {
 		std::cout << "\nError While Creating Table:" << Error;
-	//	logs("error on user table", 2);
+		//	logs("error on user table", 2);
 		sqlite3_free(Error);
 	}
 	else {
 		//logs("User table Created Successfully", 1);	
-			query = "CREATE TABLE IF NOT EXISTS Marketplace ("
+		query = "CREATE TABLE IF NOT EXISTS Marketplace ("
+			"userID INTEGER,"
+			"itemName TEXT,"
+			"price INTEGER);";
+
+		exit = sqlite3_open(s, &db);
+		exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
+		if (exit != SQLITE_OK) {
+			std::cout << "\nError While Creating Table:" << Error;
+			//	logs("error on Marketplace table", 2);
+			sqlite3_free(Error);
+		}
+		else {
+			//logs("Marketplace Database table Created Successfully", 1);
+			query = "CREATE TABLE IF NOT EXISTS Inventory ("
 				"userID INTEGER,"
-				"itemName TEXT,"
-				"price INTEGER);";
+				"item TEXT,"
+				"amount INTEGER);";
 
 			exit = sqlite3_open(s, &db);
 			exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
 			if (exit != SQLITE_OK) {
 				std::cout << "\nError While Creating Table:" << Error;
-			//	logs("error on Marketplace table", 2);
+				//	logs("error on  table", 2);
 				sqlite3_free(Error);
 			}
 			else {
-				//logs("Marketplace Database table Created Successfully", 1);
-				query = "CREATE TABLE IF NOT EXISTS Inventory ("
-					"userID INTEGER,"
-					"item TEXT,"
-					"amount INTEGER);";
+				//	logs("Inventory table was created successfully!", 1);
+				query = "CREATE TABLE IF NOT EXISTS Messages ("
+					"MessageID	INTEGER UNIQUE,"
+					"senderID INTEGER,"
+					"sender_name TEXT,"
+					"receiverID INTEGER,"
+					"message TEXT,"
+					"PRIMARY KEY(MessageID AUTOINCREMENT));";
 
 				exit = sqlite3_open(s, &db);
 				exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
+
 				if (exit != SQLITE_OK) {
-					std::cout << "\nError While Creating Table:" << Error;
-				//	logs("error on  table", 2);
+					std::cout << "\nError While Creating Messages Table:" << Error;
+					//	logs("error on  table", 2);
 					sqlite3_free(Error);
+					system("pause");
 				}
 				else {
-				//	logs("Inventory table was created successfully!", 1);
-					query = "CREATE TABLE IF NOT EXISTS Messages ("
-						"senderID INTEGER,"
-						"sender_name TEXT,"
-						"receiverID INTEGER,"
-						"message TEXT);";
-
-					exit = sqlite3_open(s, &db);
-					exit = sqlite3_exec(db, query.c_str(), NULL, 0, &Error);
-
-					if (exit != SQLITE_OK) {
-						std::cout << "\nError While Creating Messages Table:" << Error;
-						//	logs("error on  table", 2);
-						sqlite3_free(Error);
-						system("pause");
-					}
-					else {
-						Sleep(200);
-						system("title databases initialized!");
-						Sleep(200);
-					}
-
+					Sleep(200);
+					system("title databases initialized!");
+					Sleep(200);
 				}
+
 			}
+		}
 	}
 
 	sqlite3_close(db);
@@ -928,13 +931,71 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName)
 {
 	int i;
 	for (i = 0; i < argc; i++) {
-		printf(" %s\n", argv[i] ? argv[i] : "NULL");
+		// printf(" %s\n", argv[i] ? argv[i] : "NULL");
 		user.data = argv[0];
 		user.data1 = argv[i];
 	}
 	printf("\n");
 	return 0;
 }
+static int callback_marketplace_items(void* NotUsed, int argc, char** argv, char** azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (i == 0)
+		{
+			printf("name: %s price: %s", argv[0], argv[1]);
+		}
+	}
+	printf("\n");
+	return 0;
+}
+static int fetch_items(const char* s, std::string sql)
+{
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(s, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	exit = sqlite3_exec(DB, sql.c_str(), callback_marketplace_items, 0, &messageError);
+
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+		sqlite3_free(messageError);
+	}
+	else
+		return(0);
+}
+static int callback_messages(void* NotUsed, int argc, char** argv, char** azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (i == 0)
+		{
+			printf("FROM: %s ", argv[0]);
+		}
+		if (i == 1)
+		{
+			printf("MESSAGE: %s", argv[1]);
+		}
+
+	}
+	printf("\n");
+	return 0;
+}
+static int fetch_messages(const char* s, std::string sql)
+{
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(s, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	exit = sqlite3_exec(DB, sql.c_str(), callback_messages, 0, &messageError);
+
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+		sqlite3_free(messageError);
+	}
+	else
+		return(0);
+}
+
 void SettingsTab() {
 	userInput(1, 8, "Advanced Mode (W.I.P)", "Clear Logs", "Save Credentials", "Back");
 	switch (user.Settings_tab) {
@@ -946,16 +1007,16 @@ void SettingsTab() {
 		logs("Logs cleared succesfully", 1);
 		Sleep(500);
 		main(dir);
-			break;
-		case 3:
-			user.Save_Credentials = true;
-			logs("credentials will be saved after you've loginned.", 1);
-			Sleep(1000);
-			Login();
-			break;
-		case 4:
-			main(dir);
-			break;
+		break;
+	case 3:
+		user.Save_Credentials = true;
+		logs("credentials will be saved after you've loginned.", 1);
+		Sleep(1000);
+		Login();
+		break;
+	case 4:
+		main(dir);
+		break;
 	}
 
 }
