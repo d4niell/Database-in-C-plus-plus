@@ -18,3 +18,6 @@ Database in c++, short project for my school. To maintain my c++ programming kno
 * ability to view purchase history
 * you can edit items in marketplace tab (if you own them) e.g change price / delete
 * you can purchase items from marketplace 
+
+### download
+> [latest release](https://github.com/d4niell/Database-in-C-plus-plus/releases/tag/v1.1.3)
