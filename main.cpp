@@ -18,7 +18,7 @@ bool database_created = false;
 const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 bool advanced_mode = false;
-static std::string version = "1.0.9-beta.1";
+static std::string version = "1.1.2-beta.1";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
