@@ -3,7 +3,7 @@ Database in c++, short project for my school. To maintain my c++ programming kno
 
 ## Languages used:
 * c++
-* c
+* c (github decided) it's full written on c++
 
 # features list:
 * messaging system
