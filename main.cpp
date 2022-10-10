@@ -19,7 +19,7 @@ const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 static int fetch_inventory(const char* s, std::string sql);
 bool advanced_mode = false;
-static std::string version = "1.1.3";
+static std::string version = "1.1.4";
 bool logs(std::string message, int type);
 std::string username;
 std::string password;
@@ -100,6 +100,7 @@ struct {
 public:
 	std::string purchase_name;
 	int		    purchase_price;
+	int time = 1;
 
 }atm;
 struct {
@@ -166,11 +167,14 @@ bool Register() {
 	std::cout << "[*] Registration Panel";
 	color(8);
 	std::cout << "\n		Username:"; color(14); std::cin >> username; color(8); std::cout << "\n\n		Password:"; color(14); std::cin >> password; color(8);
-	if (username.length() < 3) {
+	if (username.length() <= 3) {
 		logs("username length is too short", 2);
-		if (password.length() < 3) {
+		Sleep(500);
+		main(dir);
+		if (password.length() <= 3) {
 			logs("password length is too short", 2);
-			return 1;
+			Sleep(500);
+			main(dir);
 		}
 
 	}
@@ -237,8 +241,8 @@ void view_ATM_purchase_history() {
 		std::string line;
 		while (getline(myfile, line)) { //getline loop 
 
-			std::cout << "------------------->"; color(14); std::cout << line << std::endl; color(8);
-			std::cout << "\n\n";
+			std::cout << "> "; color(14); std::cout << line << std::endl; color(8);
+			std::cout << "\n";
 		}
 	}
 	system("pause");
@@ -255,7 +259,8 @@ void add_ATM_purchase_history(std::string purchase_item, int purchase_price) {
 		perror("\n");
 	}
 	else {
-		myfile << "[purchased] date:" << dt << "type: [purchase] name: " << purchase_item << " price: " << purchase_price << "\n";
+		myfile << "(" <<  atm.time << ") date: " << dt << "(" << atm.time << ") name: " << purchase_item << " price: " << purchase_price << "\n";
+		atm.time++;
 	}
 	myfile.close();
 }
@@ -374,7 +379,7 @@ void confirm_market_purchase() {
 		std::string delete_item = "DELETE FROM Marketplace WHERE itemName = '" + market.item_name + "';";
 
 		selectData(dir, delete_item);
-		Sleep(500);
+		Sleep(200);
 		userPanel();
 	}
 
@@ -661,7 +666,7 @@ start:
 	if (attempts == 3) {
 		std::cout << "\n";
 		logs("too many failed login attempts", 2);
-		Sleep(1000);
+		Sleep(500);
 		main(dir);
 	}
 	std::cout << "\nUsername\n> "; color(14); std::cin >> username; color(8); std::cout << "\n\nPassword\n> "; color(14); std::cin >> password;
@@ -684,7 +689,7 @@ start:
 		else
 		{
 			logs("Invalid Username/password", 2);
-			Sleep(1000);
+			Sleep(500);
 			attempts++;
 			goto start;
 		}
@@ -693,7 +698,7 @@ start:
 	}
 	else {
 		logs("username/password length is invalid", 2);
-		Sleep(1000);
+		Sleep(500);
 		attempts++;
 		goto start;
 		Login();
@@ -800,9 +805,6 @@ int main(const char* s) {
 	}
 
 	CheckforPrivilege();
-	if (isLoginned == false) {
-		logs("You're not logged in, please make sure to do so or register by pressing 2", 2);
-	}
 	sqlite3* db;
 	createDB(dir);
 	createTable(dir);
@@ -939,7 +941,7 @@ static int callback_marketplace_items(void* NotUsed, int argc, char** argv, char
 	for (i = 0; i < argc; i++) {
 		if (i == 0)
 		{
-			printf("name: %s price: %s", argv[0], argv[1]);
+			printf("name: %s price: $%s", argv[0], argv[1]);
 		}
 	}
 	printf("\n");
@@ -1070,7 +1072,7 @@ void Checkforsettings() {
 	}
 	else {
 		logs("Your Settings Couldn't Be Loaded Due To Insufficient Permissions.", 3);
-		Sleep(2000);
+		Sleep(1000);
 		isChecked = true;
 		main(dir);
 	}
