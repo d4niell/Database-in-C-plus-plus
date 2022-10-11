@@ -21,7 +21,7 @@ const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 static int fetch_inventory(const char* s, std::string sql);
 bool advanced_mode = false;
-static std::string version = "1.1.4";
+static std::string version = "1.1.5";
 bool logs(std::string message, int type);
 bool Login();
 static int createTable(const char* s);
