@@ -236,3 +236,7 @@ dbincpp << [You're not logged in, please make sure to do so or register by press
 
 dbincpp << [Thank you for testing me out, have fun!]
 
+dbincpp << [Your Settings Couldn't Be Loaded Due To Insufficient Permissions.]
+
+dbincpp << [Admin privileges are necessary]
+
