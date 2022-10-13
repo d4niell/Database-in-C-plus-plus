@@ -13,24 +13,24 @@ int ans = 0;
 int isAdmin = 0;
 bool isLoginned = false;
 bool findUserInventory(int _id);
-static int callback_username(void* NotUsed, int argc, char** argv, char** azColName);
 int isChecked = false;
 bool database_created = false;
-static int fetch_username(const char* s, std::string sql);
 const char* dir = "C:\\Database.db";
 static bool isBeta = true;
 static int fetch_inventory(const char* s, std::string sql);
 bool advanced_mode = false;
-static std::string version = "1.1.5";
+static std::string version = "1.1.4";
 bool logs(std::string message, int type);
-bool Login();
 static int createTable(const char* s);
 static int fetch_items(const char* s, std::string sql);
 void Messages();
 void SettingsTab();
 std::vector<std::string> lines;
-static int fetch_unpw(const char* s, std::string sql);
 void fetchcashAmount();
+static int fetch_unpw(const char* s, std::string sql);
+static int callback_unpw(void* NotUsed, int argc, char** argv, char** azColName);
+static int callback_username(void* NotUsed, int argc, char** argv, char** azColName);
+static int fetch_username(const char* s, std::string sql);
 void Checkforsettings();
 void delete_marketplace_item();
 void ATM();
@@ -40,7 +40,6 @@ void userPanel();
 std::string line;
 void userInput(int cls, int type, std::string o1, std::string o2, std::string o3, std::string o4);
 int main(const char* s);
-static int callback_unpw(void* NotUsed, int argc, char** argv, char** azColName);
 static int createDB(const char* s);
 static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 static int insertData(const char* s, std::string sql);
@@ -69,8 +68,6 @@ void SaveData_local(std::string message) {
 struct {
 public:
 	int mainAns = 0;
-	std::string username;
-	std::string password;
 	int userpanelAns = 0;
 	int ATMAns = 0;
 	int cash = 0;
@@ -92,6 +89,8 @@ public:
 	bool Save_Credentials = false;
 	std::string user_un;
 	std::string user_pw;
+	std::string username;
+	std::string password;
 	std::string col_name;
 
 
@@ -167,7 +166,6 @@ bool logs(std::string message, int type) { //prints out logs
 	return 0;
 }
 bool Register() {
-
 	system("cls");
 	color(14);
 	std::cout << "[*] Registration Panel";
@@ -190,7 +188,7 @@ bool Register() {
 		std::string save = "INSERT INTO User (username, password) VALUES ('" + user.username + "','" + user.password + "');";
 		insertData(dir, save);
 		logs("registration succesfull!", 1);
-		Login();
+		main(dir);
 		return 0;
 	}
 
@@ -267,7 +265,7 @@ void add_ATM_purchase_history(std::string purchase_item, int purchase_price) {
 		perror("\n");
 	}
 	else {
-		myfile << "(" <<  atm.time << ") date: " << dt << "(" << atm.time << ") name: " << purchase_item << " price: " << purchase_price << "\n";
+		myfile << "(" << atm.time << ") date: " << dt << "(" << atm.time << ") name: " << purchase_item << " price: " << purchase_price << "\n";
 		atm.time++;
 	}
 	myfile.close();
@@ -566,7 +564,7 @@ void send_message() {
 	std::string s_user_uid;
 	std::cout << "\nusername\n> "; color(14); std::cin >> s_username; color(8); std::cout << "\nmessage\n> "; color(14); std::cin >> s_message;
 	color(8);
-	if (s_message.length() <= 2) {
+	if (s_message.length() <= 3) {
 		logs("message is too short, please avoid spamming", 2);
 	}
 	else {
@@ -575,7 +573,7 @@ void send_message() {
 		s_user_uid = user.data1; //user UID
 		std::string send_message = "INSERT INTO Messages (senderID, sender_name, receiverID, message) VALUES (" + user.uid + ",'" + user.username + "'," + s_user_uid + ",'" + s_message + "');";
 		insertData(dir, send_message);
-		logs("Message sent successfully", 1);
+		logs("Message sent succesfully", 1);
 		Messages();
 	}
 }
@@ -679,7 +677,41 @@ start:
 	}
 	std::cout << "\nUsername\n> "; color(14); std::cin >> user.username; color(8); std::cout << "\n\nPassword\n> "; color(14); std::cin >> user.password;
 	std::string sql = "SELECT username, password FROM User WHERE username = '" + user.username + "' AND password = '" + user.password + "';";
-	fetch_unpw(dir, sql);
+	selectData(dir, sql);
+	if (user.username.length() > 3 && user.password.length() > 3) {
+		if (!user.data.find(user.username)) {
+			if (!user.data1.find(user.password)) {
+				if (user.Save_Credentials == true) { //for "save credentials" feature //todo
+					std::ofstream save_data;
+					save_data.open("c://credentials.txt");
+					if (save_data.is_open()) {
+						save_data << user.username << " " << user.password;
+						save_data.close();
+					}
+				}
+				userPanel();
+			}
+		}
+		else
+		{
+			logs("Invalid Username/password", 2);
+			Sleep(500);
+			attempts++;
+			goto start;
+		}
+
+
+	}
+	else {
+		logs("username/password length is invalid", 2);
+		Sleep(500);
+		attempts++;
+		goto start;
+		Login();
+	}
+
+	//system("pause");
+
 	return 0;
 }
 
@@ -952,6 +984,37 @@ static int callback_messages(void* NotUsed, int argc, char** argv, char** azColN
 	printf("\n");
 	return 0;
 }
+static int fetch_messages(const char* s, std::string sql)
+{
+	sqlite3* DB;
+	char* messageError;
+	int exit = sqlite3_open(s, &DB);
+	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
+	exit = sqlite3_exec(DB, sql.c_str(), callback_messages, 0, &messageError);
+
+	if (exit != SQLITE_OK) {
+		std::cerr << "Error in selectData function." << std::endl;
+		sqlite3_free(messageError);
+	}
+	else
+		return(0);
+}
+static int callback_inventory(void* NotUsed, int argc, char** argv, char** azColName) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (i == 0)
+		{
+			printf("item: %s ", argv[0]);
+		}
+		if (i == 1)
+		{
+			printf("quantity: %s", argv[1]);
+		}
+
+	}
+	printf("\n");
+	return 0;
+}
 static int fetch_username(const char* s, std::string sql)
 {
 	sqlite3* DB;
@@ -982,37 +1045,6 @@ static int callback_username(void* NotUsed, int argc, char** argv, char** azColN
 		}
 
 	}
-	return 0;
-}
-static int fetch_messages(const char* s, std::string sql)
-{
-	sqlite3* DB;
-	char* messageError;
-	int exit = sqlite3_open(s, &DB);
-	/* An open database, SQL to be evaluated, Callback function, 1st argument to callback, Error msg written here*/
-	exit = sqlite3_exec(DB, sql.c_str(), callback_messages, 0, &messageError);
-
-	if (exit != SQLITE_OK) {
-		std::cerr << "Error in selectData function." << std::endl;
-		sqlite3_free(messageError);
-	}
-	else
-		return(0);
-}
-static int callback_inventory(void* NotUsed, int argc, char** argv, char** azColName) {
-	int i;
-	for (i = 0; i < argc; i++) {
-		if (i == 0)
-		{
-			printf("item: %s ", argv[0]);
-		}
-		if (i == 1)
-		{
-			printf("quantity: %s", argv[1]);
-		}
-
-	}
-	printf("\n");
 	return 0;
 }
 static int fetch_unpw(const char* s, std::string sql)
@@ -1058,7 +1090,6 @@ static int fetch_inventory(const char* s, std::string sql)
 	else
 		return(0);
 }
-
 
 void SettingsTab() {
 	userInput(1, 8, "Advanced Mode (W.I.P)", "Clear Logs", "Save Credentials", "Back");
